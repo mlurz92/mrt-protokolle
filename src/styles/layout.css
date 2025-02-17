@@ -1,0 +1,12 @@
+/* src/styles/layout.css */
+#app {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  #app {
+    flex-direction: row;
+  }
+}

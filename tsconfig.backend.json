@@ -1,0 +1,14 @@
+// tsconfig.backend.json
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "CommonJS",
+      "strict": true,
+      "esModuleInterop": true,
+      "outDir": "dist/api",
+      "rootDir": "src/api"
+    },
+    "include": ["src/api/**/*.ts"],
+    "exclude": ["node_modules"]
+  }
+  
