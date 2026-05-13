@@ -42,9 +42,6 @@ myexam_prisma_fit_multifile_app/
 ├── data/
 │   ├── protocol-database.js
 │   └── protocol-database.json
-├── docs/
-│   └── audit/
-│       └── split-audit.json
 ├── index.html
 ├── manifest.json
 └── README.md
