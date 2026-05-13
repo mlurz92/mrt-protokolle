@@ -3,28 +3,123 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>myExam Cockpit Explorer · Prisma Fit · Kopf + Wirbelsäule</title>
+<title>myExam Cockpit Explorer · Prisma Fit</title>
+<link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="assets/css/myexam-cockpit.css" />
 <script defer src="data/protocol-database.js"></script>
 <script defer src="assets/js/app.js"></script>
 </head>
 <body>
 <div class="app">
-  <header class="window-title"><div>myExam Cockpit - Explorer</div><div class="window-controls"><span>?</span><span>▢</span><span>×</span></div></header>
+
+  <!-- Fenstertitel -->
+  <header class="window-title">
+    <div class="wt-left">myExam Cockpit - Explorer</div>
+    <div class="window-controls">
+      <span title="Hilfe">?</span>
+      <span title="Maximieren">▢</span>
+      <span title="Schließen">×</span>
+    </div>
+  </header>
+
+  <!-- Ribbon -->
   <section class="ribbon">
-    <div class="ribbon-group"><div class="ribbon-title">Explorer</div><div class="ribbon-tabs"><span class="active">Browse</span><span>Importieren</span><span>Export</span></div></div>
-    <div class="ribbon-group"><div class="ribbon-title">Programm Editor</div><div class="ribbon-tabs r2"><span class="active">Bearbeiten</span><span>Simulieren</span></div></div>
+    <div class="ribbon-group">
+      <div class="ribbon-title">Explorer</div>
+      <div class="ribbon-tabs">
+        <span class="active">Browse</span>
+        <span>Importieren</span>
+        <span>Export</span>
+      </div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-title">Programm Editor</div>
+      <div class="ribbon-tabs r2">
+        <span class="active">Bearbeiten</span>
+        <span>Simulieren</span>
+      </div>
+    </div>
   </section>
-  <section class="toolbar"><div class="tool-left"><span class="ico">⚑</span><span class="ico">⌄</span><span class="ico">⌁</span><span class="ico">⌄</span><span class="ico">×</span><span class="ico">◻</span><span class="ico">◱</span><span class="ico">↶</span><span class="ico">↷</span></div><div class="toolbar-fill"></div><div class="zoom"><span>⌕</span><span>⌕</span></div></section>
+
+  <!-- Toolbar -->
+  <section class="toolbar">
+    <div class="tool-left">
+      <span class="ico" title="Neu">
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="9" height="12" rx="1"/><polyline points="8,1 8,5 12,5"/><path d="M8 1l4 4"/></svg>
+      </span>
+      <span class="ico" title="Importieren">
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="8" y1="5" x2="8" y2="11"/><polyline points="5,9 8,12 11,9"/></svg>
+      </span>
+      <span class="ico-sep"></span>
+      <span class="ico" title="Löschen">
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3,4 13,4"/><path d="M5 4v9h6V4"/><polyline points="6,4 6,2 10,2 10,4"/></svg>
+      </span>
+      <span class="ico" title="Kopieren">
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="9" height="10" rx="1"/><path d="M3 11V2h9"/></svg>
+      </span>
+      <span class="ico" title="Einfügen">
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="10" height="11" rx="1"/><path d="M5 4V2h7v2"/><line x1="5" y1="8" x2="9" y2="8"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
+      </span>
+      <span class="ico-sep"></span>
+      <span class="ico" id="btnUndo" title="Rückgängig (Strg+Z)">
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8 C3 5 6 3 9 3 C12 3 14 5 14 8 C14 11 12 13 9 13"/><polyline points="3,5 3,8 6,8"/></svg>
+      </span>
+      <span class="ico" id="btnRedo" title="Wiederholen (Strg+Y)">
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 8 C13 5 10 3 7 3 C4 3 2 5 2 8 C2 11 4 13 7 13"/><polyline points="13,5 13,8 10,8"/></svg>
+      </span>
+    </div>
+    <div class="toolbar-fill"></div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomOut" title="Verkleinern (Strg+−)">
+        <svg viewBox="0 0 18 18" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <circle cx="7.5" cy="7.5" r="5.2"/>
+          <line x1="5.2" y1="7.5" x2="9.8" y2="7.5"/>
+          <line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/>
+        </svg>
+      </button>
+      <span class="zoom-level" id="zoomLevel" title="Doppelklick: Zoom zurücksetzen">100%</span>
+      <button class="zoom-btn" id="zoomIn" title="Vergrößern (Strg++)">
+        <svg viewBox="0 0 18 18" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <circle cx="7.5" cy="7.5" r="5.2"/>
+          <line x1="7.5" y1="5.2" x2="7.5" y2="9.8"/>
+          <line x1="5.2" y1="7.5" x2="9.8" y2="7.5"/>
+          <line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main: Sidebar + Workspace -->
   <main class="main">
     <aside class="sidebar">
-      <div class="fleet-row"><div class="fleet-select">FLEET <span>▼</span></div><div class="lock">▣</div></div>
-      <div class="search-row"><div class="search-icon">⌕</div><input id="search" placeholder="Suche" autocomplete="off"><button id="clear" title="Suche löschen">×</button><div id="searchCount" class="search-count"></div></div>
+      <div class="fleet-row">
+        <div class="fleet-select">FLEET <span>▼</span></div>
+        <div class="lock" title="Gesperrt">
+          <svg viewBox="0 0 14 16" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="10" height="8" rx="1"/><path d="M4 7V5a3 3 0 016 0v2"/></svg>
+        </div>
+      </div>
+      <div class="search-row">
+        <div class="search-icon">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#c8ccc4" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="6.5" cy="6.5" r="4.5"/>
+            <line x1="10" y1="10" x2="14.5" y2="14.5"/>
+          </svg>
+        </div>
+        <input id="search" placeholder="Suche" autocomplete="off" spellcheck="false" />
+        <button id="clear" title="Suche löschen">×</button>
+        <div id="searchCount" class="search-count"></div>
+      </div>
       <div id="tree" class="tree"></div>
     </aside>
-    <section class="workspace"><div id="program" class="program-wrap"></div></section>
+
+    <section class="workspace" id="workspace">
+      <div id="program" class="program-wrap"></div>
+    </section>
   </main>
+
+  <!-- Statuszeile -->
   <footer id="status" class="status">Bereit.</footer>
+
 </div>
 </body>
 </html>
