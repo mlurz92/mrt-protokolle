@@ -114,3 +114,17 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#292
 .seq-row { padding:6px 6px 3px 8px; }
 .seq-name { max-width:calc(100% - 82px); }
 .icons,.person,.badge { display:none !important; }
+
+
+/* responsive anti-overlap tuning */
+.lane{overflow:hidden}
+.seq-row,.decision-q,.decision-title,.branch-label,.sub-label{overflow:hidden}
+.seq-name,.seq-time,.pill,.qtext,.branch-label,.decision-title,.sub-label{font-size:clamp(11px,0.95vw,18px);line-height:1.2}
+.seq-time{max-width:82px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{max-width:46%;overflow:hidden;text-overflow:ellipsis}
+.qtext,.sub-label,.decision-title,.branch-label{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;padding-right:6px;padding-left:6px}
+@media (max-width: 1400px){
+  .seq-row{height:34px}
+  .decision-q{height:34px}
+  .branch-label{height:22px}
+}

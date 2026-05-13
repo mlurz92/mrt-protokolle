@@ -92,7 +92,8 @@ Die Anwendung ist als **statisches Frontend** aufgebaut und benötigt keinen Bac
 - text clipping/ellipsis bei langen Sequenznamen,
 - stabile Zeilenhöhen,
 - konsistente Positionen für Zeit und Pills,
-- kontrollierte Grid-Spalten für Branch-Entscheidungen.
+- kontrollierte Grid-Spalten für Branch-Entscheidungen,
+- **dynamische Schriftanpassung** per JS (`adaptTypography`/`fitText`) plus CSS-`clamp()` für kleine Viewports.
 
 ## Bedienlogik
 - möglichst wenige Klicks bis zur gewünschten Protokollansicht,

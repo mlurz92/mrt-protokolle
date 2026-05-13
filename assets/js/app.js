@@ -75,7 +75,8 @@ function renderTree(){
      div.style.setProperty('--indent',(indent+20)+'px');
      div.textContent=item.name;
      div.title=item.path;
-     div.onclick=()=>{ selectedPath=item.path; renderTree(); renderProgram(); };
+     div.onclick=()=>{ selectedPath=item.path; renderTree(); renderProgram();
+window.addEventListener('resize', adaptTypography); };
      tree.appendChild(div);
    }
  }
@@ -127,14 +128,33 @@ function rowFromProtocol(a){
  let pill=''; if(kind==='MPR Assignment') pill='MPR Assignment'; else if(kind==='MPR Planning') pill='MPR Planning'; else if(kind==='Basic Decision') pill='Basic Decision'; else if(kind==='Scout') pill='AutoAlign Scout';
  return {t:'row', name, time:time||'', note:note||branch||'', pill};
 }
+
+function fitText(el, min=10, max=18){
+  if(!el) return;
+  el.style.fontSize=max+'px';
+  let guard=0;
+  while((el.scrollWidth>el.clientWidth || el.scrollHeight>el.clientHeight) && max>min && guard<20){
+    max -= 1; guard += 1;
+    el.style.fontSize=max+'px';
+  }
+}
+function adaptTypography(){
+  document.querySelectorAll('.seq-name').forEach(el=>fitText(el,10,17));
+  document.querySelectorAll('.seq-time').forEach(el=>fitText(el,10,16));
+  document.querySelectorAll('.pill').forEach(el=>fitText(el,9,14));
+  document.querySelectorAll('.qtext,.decision-title,.branch-label,.sub-label').forEach(el=>fitText(el,10,16));
+}
+
 function renderProgram(){
  const p=byPath[selectedPath] || PROTOCOLS[0]; selectedPath=p.path;
  const spec=SPECS[p.path] || fallbackSpec(p);
  const el=document.getElementById('program');
  el.innerHTML=renderSpec(spec,p);
+ adaptTypography();
  document.querySelectorAll('.seq-row').forEach(row=>row.addEventListener('mouseenter',()=>{const s=document.getElementById('status'); if(s) s.textContent='Sequenz: '+row.querySelector('.seq-name').textContent+' · '+(row.dataset.note||'');}));
  const s=document.getElementById('status'); if(s) s.textContent='Es wird gemessen 00:01:24 · '+p.path;
 }
 document.getElementById('search').addEventListener('input', renderTree);
 document.getElementById('clearSearch').addEventListener('click',()=>{document.getElementById('search').value=''; renderTree(); document.getElementById('search').focus();});
 renderTree(); renderProgram();
+window.addEventListener('resize', adaptTypography);
