@@ -1,0 +1,17 @@
+{
+  "name": "myExam Cockpit Explorer · Prisma Fit",
+  "version": "v9_multifile_no_visual_functional_change",
+  "entrypoint": "index.html",
+  "protocols_total": 60,
+  "head_protocols": 42,
+  "spine_protocols": 18,
+  "files": [
+    "README.md",
+    "assets/css/myexam-cockpit.css",
+    "assets/js/app.js",
+    "data/protocol-database.js",
+    "data/protocol-database.json",
+    "docs/audit/split-audit.json",
+    "index.html"
+  ]
+}

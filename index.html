@@ -3,22 +3,28 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>myExam Cockpit - Explorer</title>
-<link rel="stylesheet" href="assets/css/app.css" />
+<title>myExam Cockpit Explorer · Prisma Fit · Kopf + Wirbelsäule</title>
+<link rel="stylesheet" href="assets/css/myexam-cockpit.css" />
+<script defer src="data/protocol-database.js"></script>
+<script defer src="assets/js/app.js"></script>
 </head>
-
 <body>
-
-<div class="shell">
-  <div class="content myexam-only">
-    <aside class="explorer">
-      <div class="search"><input id="search" placeholder="Suche: Protokoll, Sequenz, Decision, Branch, Zeit …" autocomplete="off" /><button id="clearSearch" type="button" title="Suche zurücksetzen">×</button><span id="searchCount"></span></div>
-      <div class="tree" id="tree"></div>
+<div class="app">
+  <header class="window-title"><div>myExam Cockpit - Explorer</div><div class="window-controls"><span>?</span><span>▢</span><span>×</span></div></header>
+  <section class="ribbon">
+    <div class="ribbon-group"><div class="ribbon-title">Explorer</div><div class="ribbon-tabs"><span class="active">Browse</span><span>Importieren</span><span>Export</span></div></div>
+    <div class="ribbon-group"><div class="ribbon-title">Programm Editor</div><div class="ribbon-tabs r2"><span class="active">Bearbeiten</span><span>Simulieren</span></div></div>
+  </section>
+  <section class="toolbar"><div class="tool-left"><span class="ico">⚑</span><span class="ico">⌄</span><span class="ico">⌁</span><span class="ico">⌄</span><span class="ico">×</span><span class="ico">◻</span><span class="ico">◱</span><span class="ico">↶</span><span class="ico">↷</span></div><div class="toolbar-fill"></div><div class="zoom"><span>⌕</span><span>⌕</span></div></section>
+  <main class="main">
+    <aside class="sidebar">
+      <div class="fleet-row"><div class="fleet-select">FLEET <span>▼</span></div><div class="lock">▣</div></div>
+      <div class="search-row"><div class="search-icon">⌕</div><input id="search" placeholder="Suche" autocomplete="off"><button id="clear" title="Suche löschen">×</button><div id="searchCount" class="search-count"></div></div>
+      <div id="tree" class="tree"></div>
     </aside>
-    <main class="workspace"><div class="program-area" id="program"></div></main>
-  </div>
+    <section class="workspace"><div id="program" class="program-wrap"></div></section>
+  </main>
+  <footer id="status" class="status">Bereit.</footer>
 </div>
-
-
-<script src="assets/js/app.js"></script>
+</body>
 </html>
