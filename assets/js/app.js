@@ -75,8 +75,7 @@ function renderTree(){
      div.style.setProperty('--indent',(indent+20)+'px');
      div.textContent=item.name;
      div.title=item.path;
-     div.onclick=()=>{ selectedPath=item.path; renderTree(); renderProgram();
-window.addEventListener('resize', adaptTypography); };
+     div.onclick=()=>{ selectedPath=item.path; renderTree(); renderProgram(); };
      tree.appendChild(div);
    }
  }
@@ -112,7 +111,7 @@ function renderSpec(spec, p){
  } else {
    html+=`<div class="lanes" style="--lanes:1"><section class="lane"><div class="lane-header">${spec.check!==false?'<span class="check">✓</span>':''}${esc(spec.title||p.name)}</div><div class="flow">${(spec.blocks||[]).map(blockHTML).join('')}</div></section></div>`;
  }
- html+=`</div><div class="meta" style="--pw:${width}px"><span><strong>${esc(p.source)}</strong> · ${p.rows.length} Einträge</span><span>${esc(spec.photo||'PDF-linear')}</span></div>`;
+ html+='</div>';
  return html;
 }
 function fallbackSpec(p){
