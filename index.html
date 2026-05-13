@@ -3,28 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>myExam Cockpit Explorer · Prisma Fit · Kopf + Wirbelsäule</title>
+<title>myExam Cockpit - Explorer</title>
 <link rel="stylesheet" href="assets/css/myexam-cockpit.css" />
-<script defer src="data/protocol-database.js"></script>
 <script defer src="assets/js/app.js"></script>
 </head>
 <body>
 <div class="app">
-  <header class="window-title"><div>myExam Cockpit - Explorer</div><div class="window-controls"><span>?</span><span>▢</span><span>×</span></div></header>
-  <section class="ribbon">
-    <div class="ribbon-group"><div class="ribbon-title">Explorer</div><div class="ribbon-tabs"><span class="active">Browse</span><span>Importieren</span><span>Export</span></div></div>
-    <div class="ribbon-group"><div class="ribbon-title">Programm Editor</div><div class="ribbon-tabs r2"><span class="active">Bearbeiten</span><span>Simulieren</span></div></div>
-  </section>
-  <section class="toolbar"><div class="tool-left"><span class="ico">⚑</span><span class="ico">⌄</span><span class="ico">⌁</span><span class="ico">⌄</span><span class="ico">×</span><span class="ico">◻</span><span class="ico">◱</span><span class="ico">↶</span><span class="ico">↷</span></div><div class="toolbar-fill"></div><div class="zoom"><span>⌕</span><span>⌕</span></div></section>
-  <main class="main">
-    <aside class="sidebar">
-      <div class="fleet-row"><div class="fleet-select">FLEET <span>▼</span></div><div class="lock">▣</div></div>
-      <div class="search-row"><div class="search-icon">⌕</div><input id="search" placeholder="Suche" autocomplete="off"><button id="clear" title="Suche löschen">×</button><div id="searchCount" class="search-count"></div></div>
-      <div id="tree" class="tree"></div>
-    </aside>
-    <section class="workspace"><div id="program" class="program-wrap"></div></section>
-  </main>
-  <footer id="status" class="status">Bereit.</footer>
-</div>
-</body>
-</html>
+<header class="titlebar"><span>myExam Cockpit - Explorer</span><div class="wc"><span>?</span><span>▢</span><span>×</span></div></header>
+<div class="tabsbar"><div class="grp"><div class="gtitle">Explorer</div><div class="tabs"><span class="on">Browse</span><span>Importieren</span><span>Export</span></div></div><div class="grp pe"><div class="gtitle">Programm Editor</div><div class="tabs"><span>Bearbeiten</span><span>Simulieren</span></div></div></div>
+<div class="actions">⚑ ▾ &nbsp; ✣ ▾ &nbsp; × ⧉ 📄 📤 ↶ ↷</div>
+<div class="layout">
+<aside class="side"><div class="fleet">FLEET <span>▾</span><button>🔒</button></div><div class="search">⌗ <input value="q"/> 🔍</div><div id="tree" class="tree"></div></aside>
+<main class="work"><div class="crumb">FLEET » Kopf » Standard » Standard +/- KM ✎ <span class="z">⌕ ⌕</span></div><div class="view"><span class="on">Patient View</span><span>Basic Patient View</span></div>
+<div class="lanes">
+<section class="lane"><h3>✓ Standard +/- KM</h3><div class="r"><u>AAHead Scout</u><b>00:14</b><span class="btn">▶ AutoAlign Scout</span></div><div class="r"><u>ep2d_diff_4scan_trace_p2_s2_2mm</u><b>01:41</b><span class="meta">⚕ <i class="tag">1</i></span></div><div class="dh">T2-FLAIR</div><div class="r slim">TSE2D <span class="btn">▶ Basic Decision</span></div><div class="note">MPR: Planung für 3D FLAIR kontrollieren</div><div class="split"><div><div class="sh">TSE2D</div><div class="r"><u>t2_tse_dark-fluid_tra_4mm</u><b>03:38</b><span class="meta">⚕ <i class="tag">1</i></span></div><div class="r"><u>t1_mprage_sag_we</u><b>04:39</b><span class="meta">⚕ <i class="tag">2</i></span><span class="btn">▶ MPR Assignment</span></div><div class="r slim">mit KM? <em>Nein ▾</em><span class="btn">▶ Basic Decision</span></div></div><div><div class="sh">SPACE/3D</div><div class="r"><u>3D_space_dark-fluid_tra_c4</u><b>04:34</b><span class="meta">⚕</span></div><div class="filler"></div></div></div><div class="dh">mit KM?</div><div class="split"><div><div class="sh">Ja</div><div class="sub">Kontrastmittel</div><div class="r"><u>t2_tse_sag_3mm</u><b>02:23</b><span class="meta">⚕ <i class="tag">2</i></span></div><div class="r"><u>t1_mprage_sag_we_KM</u><b>04:39</b><span class="meta">⚕ <i class="tag">2</i></span><span class="btn">▶ MPR Assignment</span></div><div class="r"><u>T1_space_sag_fs_black-blood_KM</u><b>03:54</b><span class="meta">⚕ <i class="tag">2</i></span><span class="btn">▶ MPR Assignment</span></div><div class="r slim">MPR: Planung <span class="btn">▶ MPR Planning</span></div></div><div><div class="sh">Nein</div><div class="sub">Kontrastmittel</div><div class="r"><u>t2_tse_sag_3mm</u><b>02:23</b><span class="meta">⚕</span></div><div class="filler tall"></div></div></div><div class="dh">SWI?</div><div class="sh center">Ja</div><div class="r"><u>t2_swi_tra_p2</u><b>03:44</b><span class="meta">⚕ <i class="tag">1</i></span></div></section>
+<section class="lane"><h3>Unkooperativ</h3><div class="r"><u>AAHead Scout</u><b>00:14</b><span class="btn">▶ AutoAlign Scout</span></div><div class="r"><u>ep2d_diff_4scan_trace_p2_s2_2mm</u><b>01:41</b><span class="meta">⚕ <i class="tag">3</i></span></div><div class="gap"></div><div class="r"><u>t2_blade_dark-fluid_tra_p2</u><b>03:56</b><span class="meta">⚕ <i class="tag">3</i></span></div><div class="r"><u>t1_t2d_tra_p2</u><b>00:24</b><span class="meta">⚕ <i class="tag">4</i></span></div><div class="r slim">mit KM? <em>Nein ▾</em><span class="btn">▶ Basic Decision</span></div><div class="dh">mit KM?</div><div class="split"><div><div class="sh">Ja</div><div class="sub">Kontrastmittel</div><div class="r"><u>t2_blade_tra_p2</u><b>02:14</b><span class="meta">⚕</span></div><div class="r"><u>t1_t2d_tra_p2_KM</u><b>00:24</b><span class="meta">⚕ <i class="tag">4</i></span></div><div class="r"><u>t1_t2d_cor_p2_KM</u><b>00:32</b><span class="meta">⚕</span></div><div class="sub">Alternativ</div><div class="r"><u>t1_t2d_sag_p2_KM</u><b>00:28</b><span class="meta">⚕</span></div><div class="r"><u>t2_haste_tra_p2</u><b>00:42</b><span class="meta">⚕</span></div></div><div><div class="sh">Nein</div><div class="r"><u>t2_blade_tra_p2</u><b>02:14</b><span class="meta">⚕</span></div><div class="filler huge"></div></div></div></section>
+</div></main></div></div>
+</body></html>
