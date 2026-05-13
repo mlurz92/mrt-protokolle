@@ -1,9 +1,25 @@
-# myExam Cockpit Explorer Clone (MAGNETOM MRT)
+# myExam Cockpit – Explorer Clone (Siemens MAGNETOM MRT)
 
-## 1. Zweck und Leitbild
-Diese Anwendung bildet den visuellen und funktionalen Charakter des **myExam Cockpit – Explorer** für Kopf-Protokolle nach. Ziel ist ein präzises, belastbares Arbeits-UI für schnelles Navigieren in Protokollbäumen, klare Sequenzdarstellung, robuste Decision-Branches und durchgehend hohe Lesbarkeit auf großen klinischen Displays.
+## Überblick
+Diese Webanwendung simuliert den **myExam Cockpit – Explorer** für neuroradiologische MRT-Protokolle (Schwerpunkt Kopf) mit starkem Fokus auf:
+- visuelle Nähe zum Referenz-UI,
+- schnelle Protokollnavigation,
+- klare Branch-/Decision-Darstellung,
+- robuste Lesbarkeit bei hoher Informationsdichte.
 
-## 2. Architektur (refaktoriert auf Multi-Datei-Struktur)
+Die Anwendung ist als **statisches Frontend** aufgebaut und benötigt keinen Backend-Server.
+
+---
+
+## Ziele der aktuellen Fassung
+1. **UI wieder nahe am Screenshot**: dunkle Cockpit-Fläche, orange Header, zweigeteilter Arbeitsbereich (Explorer links, Programmfläche rechts).
+2. **Volle Interaktivität**: Tree-Navigation, Protokollauswahl, Suche, Trefferzähler, Rendering der Sequenzstruktur.
+3. **Wartbarkeit durch Multi-Datei-Struktur** statt monolithischer Single-HTML.
+4. **Keine Überlagerungen** durch definierte Layoutregeln, feste Zeilenlogik, Branch-Gitter und saubere Overflow-Behandlung.
+
+---
+
+## Projektstruktur
 
 ```text
 .
@@ -16,83 +32,104 @@ Diese Anwendung bildet den visuellen und funktionalen Charakter des **myExam Coc
 └── README.md
 ```
 
-### Warum diese Struktur?
-- **Trennung von Verantwortung:** Markup, Stil und Logik sind unabhängig wartbar.
-- **Schnellere Iteration:** UI/UX-Feinschliff in CSS ohne Script-Risiken.
-- **Bessere Testbarkeit:** Rendering-/Suchlogik zentral in `app.js`.
+### Verantwortlichkeiten
+- `index.html`: UI-Skelett (Shell, Explorer, Workspace, Search, Program Container).
+- `assets/css/app.css`: vollständiges Cockpit-Design inkl. Komponenten-Styles.
+- `assets/js/app.js`: Datenmodell (`PROTOCOLS`, `SPECS`), Suchindex, Tree-Renderer, Program-Renderer, Event-Binding.
 
-## 3. UI/UX-Designsystem
+---
 
-### 3.1 Farb- und Kontrastsystem
-- Dunkles, kliniktaugliches Grundschema mit blau/schwarzem Verlauf.
-- Orange als Primär-Akzent für Lane-Köpfe und Decision-Titel.
-- Hoher Textkontrast für Sequenznamen, Zeiten und Navigationsbaum.
+## Funktionale Bausteine im Detail
 
-### 3.2 Typografie und Hierarchie
-- Klare Ebenen: Ordner/Items links, Protokoll-Flow rechts.
-- Große Sequenzschrift zur Distanzlesbarkeit.
-- Zeitangaben und Action-Pills konstant positioniert zur visuellen Routine.
+## 1) Explorer-Baum (linke Spalte)
+- Hierarchische Folder-Struktur basierend auf `path`-Strings (`Kopf > …`).
+- Expand/Collapse je Knoten.
+- Markierung des aktiven Programms (`selected`).
+- Optionales Highlighting von Trefferknoten bei aktiver Suche.
 
-### 3.3 Kollisionsfreiheit / keine Überlagerung
-- Grid-basierte Lane-Architektur statt freier Positionierung.
-- Mindesthöhen für Reihen und Labels.
-- Begrenzte Textbreiten + Ellipsis gegen Überschneidung von Namen und Zeit.
+## 2) Suche
+- Live-Suche über Eingabefeld.
+- Durchsucht:
+  - Gruppen,
+  - Programmnamen,
+  - vollständige Pfade,
+  - Sequenzbezeichner,
+  - Decision-Inhalte,
+  - Hinweise,
+  - Spec-Struktur.
+- Trefferzähler (`#searchCount`) und „Keine Treffer“-Status.
+- Reset per Clear-Button.
 
-## 4. Interaktionsmodell
+## 3) Programmdarstellung (rechte Fläche)
+- Protokollansicht als Lanes (parallelisierte Programmzweige).
+- Lane-Header mit optionalem Checkmarker.
+- Sequenzzeilen mit:
+  - Name,
+  - Zeit,
+  - optionaler Funktions-Pill (z. B. *MPR Assignment*, *MPR Planning*, *AutoAlign Scout*).
+- Decision-Elemente:
+  - Frage,
+  - Default-Dropdown (statisch im Mock),
+  - Branch-Spalten (Ja/Nein/Alternativen etc.).
 
-### 4.1 Explorer (linke Seite)
-- Baumdarstellung aller Protokolle.
-- Expand/Collapse auf Folder-Ebene.
-- Selektionszustand klar hervorgehoben.
+## 4) Daten-/Layoutmodell
+- `PROTOCOLS`: lineare, fachliche Sequenzdaten inkl. Meta.
+- `SPECS`: visuelle Strukturregeln pro Pfad (Lanes, Blöcke, Decisions, Labels).
+- Fallback-Logik rendert auch dann sinnvolle Ansichten, wenn keine explizite Spec existiert.
 
-### 4.2 Suche
-- Live-Filter über:
-  - Ordnernamen
-  - Protokollnamen
-  - Sequenznamen
-  - Decision-Inhalte
-  - Branch-Texte
-- Trefferzähler inkl. „Keine Treffer“-Fallback.
+---
 
-### 4.3 Programmansicht
-- Lane-Header pro Programmzweig.
-- Sequenzzeile mit Name, Zeit, optionaler Funktions-Pill.
-- Decision-Blöcke mit Frage, Default-Auswahl und Branch-Spalten.
+## UI/UX-Prinzipien
 
-## 5. Datenmodell
-`app.js` enthält zwei zentrale Datenräume:
-- `PROTOCOLS`: lineare Protokoll-/Sequenzdaten inkl. Pfad und Metadaten.
-- `SPECS`: visuelle Strukturdefinitionen (Lanes, Blöcke, Decisions, Labels).
+## Nähe zum Original-Cockpit
+- dunkles UI mit klaren Trennlinien,
+- orange Abschnitts-/Lane-Akzente,
+- kompakte, dichte Sequenzdarstellung,
+- klinisch-pragmatische Leseführung (links Navigation, rechts Ablauf).
 
-Rendering kombiniert beide Ebenen, damit sowohl strukturierte Spezifikation als auch lineare Fallback-Darstellung zuverlässig funktionieren.
+## Lesbarkeit / Anti-Overlap
+- `overflow`-Sicherung,
+- text clipping/ellipsis bei langen Sequenznamen,
+- stabile Zeilenhöhen,
+- konsistente Positionen für Zeit und Pills,
+- kontrollierte Grid-Spalten für Branch-Entscheidungen.
 
-## 6. Rendering-Engine (Funktionsprinzip)
-1. Auswahlpfad aus Tree bestimmen.
-2. Spec laden (`SPECS[path]`) oder Fallback aus `PROTOCOLS` generieren.
-3. HTML-Fragmente für Blöcke (`row`, `label`, `decision`, `spacer`) erzeugen.
-4. Lane-Grid mit stabiler Spaltenlogik ausgeben.
+## Bedienlogik
+- möglichst wenige Klicks bis zur gewünschten Protokollansicht,
+- Suchfilter als Primärwerkzeug bei tiefen Protokollbäumen,
+- visuelles Feedback für Auswahl und Treffer.
 
-## 7. Lesbarkeits-Optimierungen im aktuellen Stand
-- Einheitliche Abstände in Zeilen und Branches.
-- Konsistente horizontale Ausrichtung von Zeit und Pills.
-- Verbesserte Sidebar-Sichtbarkeit bei tiefen Bäumen.
-- Responsives Verhalten mit abgestuftem Schriftbild unter 1280px.
+---
 
-## 8. Wartbarkeit und Erweiterung
+## Wartung & Erweiterung
 
-### Neue Protokolle hinzufügen
-1. Eintrag in `PROTOCOLS` ergänzen.
-2. Optional spezifisches visuelles Layout in `SPECS` ergänzen.
-3. Pfadkonvention `Kopf > Bereich > Protokoll` beibehalten.
+## Neues Protokoll hinzufügen
+1. `PROTOCOLS` um neuen Datensatz erweitern.
+2. Optional in `SPECS` ein detailliertes Layout für den neuen Pfad ergänzen.
+3. Pfadkonsistenz einhalten (`Kopf > Bereich > Protokoll`) für korrekte Tree-Integration.
 
-### UI anpassen
-- Farben/Typo/Spacing in `assets/css/app.css`.
-- Renderregeln und Suche in `assets/js/app.js`.
+## UI feinjustieren
+- Haupthebel liegt in `assets/css/app.css`.
+- Renderlogik/Interaktionsverhalten in `assets/js/app.js`.
 
-## 9. Robustheit und Betriebsverhalten
-- Rein clientseitig, ohne Backend-Abhängigkeiten.
-- Keine Build-Pipeline erforderlich.
-- Funktioniert direkt über statisches Hosting.
+---
 
-## 10. UX-Fazit
-Die Anwendung ist jetzt klarer strukturiert, visuell näher am Referenz-Stil aus dem Cockpit, besser lesbar bei dichten Sequenzlisten und deutlich wartbarer durch die modulare Dateiaufteilung.
+## Betrieb
+- Start über beliebigen statischen Server (oder lokale Dateivorschau).
+- Keine Buildchain, keine Transpiler, kein Backend.
+
+---
+
+## Qualitätssicherung (empfohlen)
+- JS-Syntaxcheck (`node --check assets/js/app.js`).
+- Manuelle Klicktests:
+  - Folder Expand/Collapse,
+  - Item-Auswahl,
+  - Suche + Trefferzähler,
+  - Clear-Button,
+  - Rendering von Decision/Branch-Layouts.
+
+---
+
+## Zusammenfassung
+Diese Version stellt den Fokus wieder auf die **funktionierende, klickbare und visuell nahe Cockpit-Erfahrung**, bleibt aber zugleich durch die **modulare Dateistruktur** nachhaltig wartbar.
