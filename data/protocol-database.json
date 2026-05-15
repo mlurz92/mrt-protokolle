@@ -4509,7 +4509,7 @@
   ],
   "specs": {
     "Kopf > Standard > Standard +/- KM": {
-      "width": 950,
+      "width": 1120,
       "layout": "lanes",
       "title": "Standard +/- KM",
       "photo": "F51BA76A / Scannerfoto",
@@ -4562,7 +4562,7 @@
                   ]
                 }
               ],
-              "note": ""
+              "note": "MPR: Planung für 3D FLAIR kontrollieren"
             },
             {
               "t": "row",
