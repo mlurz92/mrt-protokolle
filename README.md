@@ -1,97 +1,141 @@
-# mrt-protokolle
+# mrt-protokolle – vollständige Anwendungsdokumentation
 
-## Überblick
-`mrt-protokolle` ist eine statische, offline lauffähige Workstation-Imitation für die Darstellung und Navigation von MRT-Protokollen im Stil eines Siemens myExam Cockpit/FLEET Explorers. Die Anwendung ist bewusst technisch, dicht, rasterorientiert und nicht als moderne SaaS-Card-UI konzipiert.
+## 1) Produktzweck
+`mrt-protokolle` ist eine statische Web-Anwendung, die eine Siemens-myExam-Cockpit-/FLEET-ähnliche Explorations- und Suchbedienung für MRT-Protokolle emuliert. Der Schwerpunkt liegt nicht auf „modernem Webdesign“, sondern auf einer dichten, funktionalen Workstation-UX: schnelle Navigation, präzise Trefferkontexte, visuelle Stabilität und reproduzierbares Bedienverhalten.
 
-## Ziele der Anwendung
-- Kompakte, scannernahe Oberfläche mit klarer Hierarchie: Titlebar → Ribbon → Toolbar → Explorer-Tree → Workspace.
-- Datengetriebene Programmdarstellung mit fester Programmbreite aus `spec.width`.
-- Stabiler Tree-Explorer mit Ordner/Programm-Selektion, Suche, Keyboard-Navigation und Collapse-All.
-- Programmansicht mit Lane-Struktur, Decision-Blöcken, Viewtabs und Zoom-Funktion.
+## 2) Leitprinzipien der UX
+- **Kompakte technische Darstellung** (kleine Zeilen, klare Raster, geringe Abstände).
+- **Persistenter Suchmodus** statt temporärem Filter-Overlay.
+- **Hierarchischer Kontext bleibt erhalten** (Tree mit Parent-Pfaden, rekursiven Counts, selektionssicherem Verhalten).
+- **Sichtbare und nachvollziehbare Treffer** (gelbe Inline-Highlights + gelbe `[n]`-Zählungen).
+- **Sichere Textverarbeitung** (Escaping, Regex-Schutz, keine unkontrollierte HTML-Injektion).
 
-## Projektstruktur
-- `index.html`: Shell-Struktur und statische UI-Container.
-- `assets/css/myexam-cockpit.css`: Kompletter visueller Workstation-Style.
-- `assets/js/app.js`: Datenbindung, Tree-Modell, Suche, Rendering, Keyboard/Zoom/Context-Menu.
-- `data/protocol-database.json`: Primäre Protokoll-/Spec-Daten.
-- `data/protocol-database.js`: Exponiert Daten als `window.MYEXAM_PROTOCOL_DATABASE`.
-- `manifest.json`: PWA-Metadaten.
+## 3) Technische Architektur
+### 3.1 Laufzeitmodell
+Die Anwendung arbeitet vollständig im Browser und benötigt kein Build-System.
 
-## UI- und UX-Details
+### 3.2 Kernmodule
+- `index.html`: statisches Shell-Layout (Titelzeile, Ribbon, Toolbar, Sidebar, Workspace).
+- `assets/js/app.js`: Tree-Aufbau, Suchindex, Search-State, Rendering, Eventhandling, Zoom.
+- `assets/css/myexam-cockpit.css`: Workstation-Styling, Tree, Search, Programmansicht, Folder-Listen.
+- `data/protocol-database.js`: bindet `window.MYEXAM_PROTOCOL_DATABASE` ein.
+- `data/protocol-database.json`: medizinische Rohdaten (Protokolle + Specs).
 
-### 1) Fenster- und Navigationsrahmen
-- Dunkle Titlebar mit klassischen Window-Control-Glyphs.
-- Ribbon-Gruppen „Explorer“ und „Programm Editor“ mit statischen Tabs.
-- Technische Toolbar mit kompakten 24×24 Controls, klaren Disabled-States und hard-edge Hover.
+## 4) Datenstruktur und Ableitungen
+### 4.1 Primärdaten
+- `protocols[]`: Programmliste mit Pfad und Anzeigebezeichner.
+- `specs{}`: Detaildefinition pro Programmpfad (Lanes, Blocks, Decisions, Labels, usw.).
 
-### 2) Kontextmenü
-- Trigger über Toolbar-Button (`#treeMenuButton`).
-- Klassisches hellgraues Menü mit Disabled-Einträgen und Separatoren.
-- Schließen per Escape, Outside-Click oder Toggle-Click.
+### 4.2 Laufzeit-Ableitungen
+- `byPath`: O(1)-Zugriff auf Programme per Pfad.
+- `treeRoot`: hierarchischer Explorer-Baum aus `protocols`.
+- `allNodes`: flache Knotenliste für globale Suchauswertung.
+- `searchIndex`: vorindizierte, sichtrelevante Textfelder pro Programm.
 
-### 3) Explorer-Sidebar
-- Feste Sidebar-Breite (`--sidebar-w: 272px`) für Workstation-Proportion.
-- FLEET-Headerzeile plus Lock-Icon.
-- Suchzeile mit Collapse-All, Suchfeld und Clear-X.
-- Tree mit ARIA-Rollen (`role="tree"`, `role="treeitem"`) und roving tabindex.
+## 5) Suchsystem im Detail
+### 5.1 Normalisierung
+- `normalizeBasic`: lower-case, Unicode-Normalisierung, Diakritika entfernt, Whitespace vereinheitlicht.
+- `normalizeLoose`: zusätzliche Separator-Toleranz (`-`, `_`, `.`, `/`, Leerzeichen).
 
-### 4) Tree-Interaktion
-- Root-Skeleton enthält alle erwarteten FLEET-Kategorien (inkl. leerer Root-Folder).
-- Ordner/Programme werden in stabiler Root-Reihenfolge dargestellt.
-- Keyboard: ArrowUp/Down, ArrowRight/Left, Home/End, Enter/Space.
-- Sichtbare Fokus-/Selektionszustände.
+### 5.2 Indexierte Felder
+- Programmpfad, Programmname, Pfadsegmente.
+- Lane-Titel.
+- Blockfelder: `name`, `time`, `pill`, `badge`, `text`, `q`, `title`, `default`.
+- Decision-Spalten: `label`, `title`, `text` + rekursive Unterblöcke.
+- Spacer-Blöcke werden bewusst nicht gezählt.
 
-### 5) Workspace-Kopf
-- Breadcrumb links im Format `FLEET » …`.
-- Pencil direkt neben Breadcrumb (nicht rechts außen).
-- Zoom-Controls oben rechts im Workspace inkl. Zoom-Prozentanzeige.
+### 5.3 Search-State
+Der Zustand enthält:
+- Query-Varianten (`raw`, `display`, `basic`, `loose`, `active`).
+- Programmtreffer inkl. Trefferfeldern und Count.
+- Rekursive Ordneraggregation.
+- Direkte Folder-Namensmatches.
+- Sichtbare Pfade (`visiblePaths`) für den Suchbaum.
+- Gesamttreffer + erster Programmtreffer für Enter-Navigation.
 
-### 6) Programmansicht
-- `program-frame` verwendet datengetriebene Breite (`--pw`) mit Viewport-sicherer Begrenzung.
-- Viewtabs (`Patient View`, `Basic Patient View`) sind klick- und tastaturbedienbar.
-- Lanes mit kräftigen orangefarbenen Headern und kompakten Reihen.
-- Decision-Note wird gerendert, wenn vorhanden.
+### 5.4 Cache
+Suchen werden über `lastSearchRaw`/`lastSearchState` gecacht und bei Eingabeänderung zuverlässig invalidiert.
 
-### 7) Folder-Workspace
-- Flache kompakte Liste (keine Cards, keine moderne Kacheloptik).
-- Leere Ordner zeigen nüchternen Empty-State: „Keine Programme in diesem Ordner.“
+## 6) Trefferzählung und Sichtbarkeit
+- Program-Count: Summe der logischen Trefferfelder im jeweiligen Programm.
+- Folder-Count: rekursiv aggregierte Summe aller Programmtreffer im Unterbaum.
+- Direkter Foldername-Match erzeugt Sichtbarkeit auch ohne Unterbaumtreffer.
+- Sichtbarkeit im Suchmodus basiert auf `visiblePaths`, nicht auf pauschalen Kind-Existenz-Heuristiken.
 
-### 8) Suche
-- Live-Filterung mit Highlighting in Tree und Programmbereich.
-- Enter öffnet ersten sinnvollen Treffer.
-- Escape/Clear-X löschen die Suche.
-- Sonderzeichen werden robust verarbeitet (escaped regex).
+## 7) Rendering-Logik
+### 7.1 Tree
+- Normalmodus: `openFolders` + Selection-Vererbung.
+- Suchmodus: nur relevante Hierarchie, automatische Öffnung relevanter Pfade, gelbe Counts.
+- ARIA-Grundsemantik: `role="tree"` und `role="treeitem"`.
 
-### 9) Zoom
-- Diskrete Zoom-Stufen (`0.25` bis `3`).
-- Shortcut-Unterstützung: `Ctrl++`, `Ctrl+=`, `Ctrl+-`, `Ctrl+0`, `Ctrl+Wheel`.
-- Zoom wirkt auf den Workspace-Inhalt, nicht auf Ribbon/Sidebar.
+### 7.2 Workspace
+- Programmknoten: vollständige Programmansicht.
+- Ordnerknoten: flache, volle rechte Liste mit direkten Kindern.
+- Aktive Suche ohne Treffer: kompakter Empty-State.
 
-## Datenbesonderheiten
-- `Kopf > Standard > Standard +/- KM` wurde auf `width: 1120` eingestellt.
-- Für die Decision `T2-FLAIR` wurde die Note ergänzt:
-  `MPR: Planung für 3D FLAIR kontrollieren`.
-- Andere Protokolle behalten ihre individuellen Breiten und Struktur.
+### 7.3 Programmanzeige
+- Lanes bleiben vollständig sichtbar; Suche blendet keine Sequenzen aus.
+- Treffer werden nur visuell markiert.
+- Decision- und Branch-Strukturen bleiben intakt.
 
-## Bedienhinweise
-1. App direkt über `index.html` im Browser öffnen.
-2. Tree links bedienen (Maus oder Tastatur).
-3. Programmansicht rechts nutzen, Tabs wechseln, bei Bedarf zoomen.
-4. Suche (`Ctrl+F`) verwenden, Treffer per Enter direkt öffnen.
+## 8) Highlighting und Sicherheit
+- Markierung über `<mark>` mit gelbem Workstation-Farbton.
+- Eingaben werden via `escapeRegExp` regex-sicher verarbeitet.
+- Sichttexte werden über `esc(...)` HTML-escaped.
+- Keine unescaped Datenbanktexte in `innerHTML`.
 
-## Technische Prinzipien
-- Vanilla HTML/CSS/JS ohne Framework-Abhängigkeit.
-- Offline-fähig, ohne Build-Pipeline.
-- Strikte Trennung zwischen Daten (`data/`) und Rendering-Logik (`assets/js/app.js`).
+## 9) Interaktionsmodell
+### 9.1 Sucheingabe
+- Live-Update von Search-State, Tree, Workspace, Selection-Reconciliation.
 
-## Qualitätssicherung (empfohlen)
-- Browser-Konsole auf Fehler prüfen.
-- Viewport-Checks: 1920×1080, 1366×768, 1024×768, 900×650, 700×550.
-- Keyboard-Navigation im Tree vollständig testen.
-- Suchbegriffe inkl. Sonderzeichen prüfen.
-- Zoom auf Min/Max testen.
-- Folder- und Programmansicht gegeneinander validieren.
+### 9.2 Clear-X
+- löscht Query, entfernt Suchmodus, rendert beide Bereiche neu, Fokus bleibt im Feld.
 
-## Einschränkungen
-- Diese Anwendung bildet eine Workstation-UI im Browser nach, ersetzt aber keine Original-Scanner-Software.
-- Read-only UI-Elemente sind bewusst deaktiviert und rein visuell/strukturell vorhanden.
+### 9.3 Escape
+- mit Suchtext: löscht Suche und aktualisiert UI.
+- ohne Suchtext: entfernt Fokus vom Suchfeld.
+
+### 9.4 Enter
+- öffnet den ersten logischen Programmtreffer aus dem Search-State.
+
+### 9.5 Shortcuts
+- `Ctrl+F` und `Ctrl+E`: Fokus + Selektieren des Suchtexts.
+- `Ctrl++`, `Ctrl+-`, `Ctrl+0`: Zoomsteuerung.
+
+## 10) Visuelle Gestaltung
+- dunkles Grundtheme, orange Lane-Akzente, gelbe Suchakzente.
+- kompakte Tree-Reihen, klare Trennlinien, keine Card-UI im rechten Ordnerbereich.
+- keine doppelten Pseudo-Icons (Tree-Icons konsolidiert).
+
+## 11) Accessibility-Basics
+- Suchfeld mit `title` und `aria-label`.
+- Tree-Container mit `role="tree"` und sprechendem Label.
+- Knoten sind fokussierbar und mit `aria-selected`/`aria-expanded` versehen.
+
+## 12) Nicht-Ziele
+- keine Framework-Migration (React/Vue/Svelte).
+- keine externen UI-Libraries.
+- keine medizinischen Datenänderungen.
+- keine helle Dashboard-Umgestaltung.
+
+## 13) Lokaler Start
+```bash
+python3 -m http.server 8000
+```
+Aufruf im Browser: `http://localhost:8000`
+
+## 14) Prüf- und QA-Checkliste
+- App startet ohne JS-Fehler.
+- Leere Suche: normaler Tree/Workspace ohne Highlights.
+- `dark-fluid`, `dark fluid`, `darkfluid`, `dark_fluid` prüfen.
+- Sonderzeichen (`+`, `[]`, `?`, `*`, `^`, `$`, `|`, `/`) prüfen.
+- Clear/Escape/Enter prüfen.
+- Klickpfade in Tree und Folderliste prüfen.
+- Empty-State prüfen.
+- Zoom/Responsive Breiten prüfen.
+
+## 15) Wartungshinweise
+- Neue Suchfelder nur hinzufügen, wenn sie auch sichtbar gerendert werden.
+- Keine neuen ad-hoc-Filter in Renderfunktionen; immer über Search-State gehen.
+- CSS-Änderungen gruppiert und ohne neue Override-Wüste pflegen.
+- Sicherheitsprinzipien (Escaping/Regex-Schutz) bei jeder UI-Erweiterung beibehalten.
