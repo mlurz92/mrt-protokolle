@@ -61,6 +61,7 @@
         <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="10" height="11" rx="1"/><path d="M5 4V2h7v2"/><line x1="5" y1="8" x2="9" y2="8"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
       </span>
       <span class="ico-sep"></span>
+      <button class="ico" id="treeMenuButton" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="toolbarMenu" title="Baum-Menü"><span aria-hidden="true">▦</span><span class="ico-caret" aria-hidden="true">▾</span></button>
       <span class="ico is-disabled" id="btnUndo" aria-disabled="true" tabindex="-1" title="Rückgängig nicht verfügbar (Read-only)">
         <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8 C3 5 6 3 9 3 C12 3 14 5 14 8 C14 11 12 13 9 13"/><polyline points="3,5 3,8 6,8"/></svg>
       </span>
@@ -69,7 +70,8 @@
       </span>
     </div>
     <div class="toolbar-fill"></div>
-    <div class="zoom-controls">
+    <div id="toolbarMenu" class="context-menu" role="menu" hidden></div>
+    <div class="zoom-controls" hidden>
       <button class="zoom-btn" id="zoomOut" title="Verkleinern (Strg+−)">
         <svg viewBox="0 0 18 18" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
           <circle cx="7.5" cy="7.5" r="5.2"/>
@@ -77,7 +79,7 @@
           <line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/>
         </svg>
       </button>
-      <button class="zoom-btn" id="zoomIn" title="Vergrößern (Strg++)">
+      <button class="zoom-btn" id="zoomInToolbar" title="Vergrößern (Strg++)">
         <svg viewBox="0 0 18 18" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
           <circle cx="7.5" cy="7.5" r="5.2"/>
           <line x1="7.5" y1="5.2" x2="7.5" y2="9.8"/>
