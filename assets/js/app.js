@@ -147,7 +147,7 @@ function invalidateSearchCache() { lastSearchRaw = null; lastSearchState = null;
 function highlightText(text, state) {
   const original = String(text ?? '');
   if (!state?.active || !state.display) return esc(original);
-  const escapedQ = (RegExp.escape ? RegExp.escape(state.display) : escapeRegExp(state.display)).replace(/\s+/g, '[\\s_\-./]*');
+  const escapedQ = escapeRegExp(state.display).replace(/\s+/g, '[\\s_\\-./]*');
   const re = new RegExp(escapedQ, 'ig');
   let out = ''; let last = 0; let match;
   while ((match = re.exec(original)) !== null) {
