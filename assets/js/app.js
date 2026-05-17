@@ -219,7 +219,9 @@ document.getElementById('workspace').addEventListener('scroll', closeContextMenu
 document.addEventListener('click', (e) => { if (!e.target.closest('#tree-context-menu')) closeContextMenu(); });
 
 treeMenu = document.getElementById('tree-context-menu');
-treeMenu.addEventListener('click', (e) => { const item = e.target.closest('button[data-action]'); if (!item || item.disabled) return; if (item.dataset.action === 'find') { closeContextMenu(); const s = document.getElementById('search'); s.focus(); s.select(); } });
+if (treeMenu) {
+  treeMenu.addEventListener('click', (e) => { const item = e.target.closest('button[data-action]'); if (!item || item.disabled) return; if (item.dataset.action === 'find') { closeContextMenu(); const s = document.getElementById('search'); s.focus(); s.select(); } });
+}
 
 ensurePathOpen(selectedNode.path);
 renderTree();
