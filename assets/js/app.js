@@ -188,7 +188,7 @@ function handleTreeKeydown(e) {
   if (e.key === 'Home') { e.preventDefault(); focusNode(nodes[0]); return; }
   if (e.key === 'End') { e.preventDefault(); focusNode(nodes[nodes.length - 1]); return; }
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateNode(current.dataset.type, current.dataset.path); return; }
-  if (e.key === 'ArrowRight') { e.preventDefault(); if (current.dataset.type === 'folder') { if (!openFolders.has(current.dataset.path)) { openFolders.add(current.dataset.path); renderTree(); } else { const next = getVisibleTreeNodes().find((n, i) => i > idx && n.style.getPropertyValue('--level') > current.style.getPropertyValue('--level')); if (next) focusNode(next); } } return; }
+if (e.key === 'ArrowRight') { e.preventDefault(); if (current.dataset.type === 'folder') { if (!openFolders.has(current.dataset.path)) { openFolders.add(current.dataset.path); renderTree(); } else { const currentLevel = Number(current.style.getPropertyValue('--level')); const next = getVisibleTreeNodes().find((n, i) => i > idx && Number(n.style.getPropertyValue('--level')) > currentLevel); if (next) focusNode(next); } } return; }
   if (e.key === 'ArrowLeft') { e.preventDefault(); if (current.dataset.type === 'folder' && openFolders.has(current.dataset.path)) { openFolders.delete(current.dataset.path); renderTree(); return; } const parent = getParentPaths(current.dataset.path).at(-1); if (parent) { const pn = document.querySelector(`.node[data-path="${CSS.escape(parent)}"]`); if (pn) focusNode(pn); } return; }
   if (e.key.length === 1 && /\S/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
     typeaheadBuffer += normalizeBasic(e.key); clearTimeout(typeaheadTimer); typeaheadTimer = setTimeout(() => { typeaheadBuffer = ''; }, 700);
