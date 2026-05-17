@@ -11,109 +11,21 @@
 </head>
 <body>
 <div class="app">
-
-  <!-- Fenstertitel -->
-  <header class="window-title">
-    <div class="wt-left">myExam Cockpit - Explorer</div>
-    <div class="window-controls">
-      <span title="Hilfe">?</span>
-      <span title="Maximieren">▢</span>
-      <span title="Schließen">×</span>
-    </div>
-  </header>
-
-  <!-- Ribbon -->
-  <section class="ribbon">
-    <div class="ribbon-group">
-      <div class="ribbon-title">Explorer</div>
-      <div class="ribbon-tabs">
-        <span class="active">Browse</span>
-        <span>Importieren</span>
-        <span>Export</span>
-      </div>
-    </div>
-    <div class="ribbon-group">
-      <div class="ribbon-title">Programm Editor</div>
-      <div class="ribbon-tabs r2">
-        <span class="active">Bearbeiten</span>
-        <span>Simulieren</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Toolbar -->
-  <section class="toolbar">
-    <div class="tool-left">
-      <span class="ico is-disabled" aria-disabled="true" tabindex="-1" title="Neu nicht verfügbar (Read-only)">
-        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="9" height="12" rx="1"/><polyline points="8,1 8,5 12,5"/><path d="M8 1l4 4"/></svg>
-      </span>
-      <span class="ico is-disabled" aria-disabled="true" tabindex="-1" title="Importieren nicht verfügbar (Read-only)">
-        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="8" y1="5" x2="8" y2="11"/><polyline points="5,9 8,12 11,9"/></svg>
-      </span>
-      <span class="ico-sep"></span>
-      <span class="ico is-disabled" aria-disabled="true" tabindex="-1" title="Löschen nicht verfügbar (Read-only)">
-        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3,4 13,4"/><path d="M5 4v9h6V4"/><polyline points="6,4 6,2 10,2 10,4"/></svg>
-      </span>
-      <span class="ico is-disabled" aria-disabled="true" tabindex="-1" title="Kopieren nicht verfügbar (Read-only)">
-        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="9" height="10" rx="1"/><path d="M3 11V2h9"/></svg>
-      </span>
-      <span class="ico is-disabled" aria-disabled="true" tabindex="-1" title="Einfügen nicht verfügbar (Read-only)">
-        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="10" height="11" rx="1"/><path d="M5 4V2h7v2"/><line x1="5" y1="8" x2="9" y2="8"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
-      </span>
-      <span class="ico-sep"></span>
-      <span class="ico is-disabled" id="btnUndo" aria-disabled="true" tabindex="-1" title="Rückgängig nicht verfügbar (Read-only)">
-        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8 C3 5 6 3 9 3 C12 3 14 5 14 8 C14 11 12 13 9 13"/><polyline points="3,5 3,8 6,8"/></svg>
-      </span>
-      <span class="ico is-disabled" id="btnRedo" aria-disabled="true" tabindex="-1" title="Wiederholen nicht verfügbar (Read-only)">
-        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 8 C13 5 10 3 7 3 C4 3 2 5 2 8 C2 11 4 13 7 13"/><polyline points="13,5 13,8 10,8"/></svg>
-      </span>
-    </div>
-    <div class="toolbar-fill"></div>
-    <div class="zoom-controls">
-      <button class="zoom-btn" id="zoomOut" title="Verkleinern (Strg+−)">
-        <svg viewBox="0 0 18 18" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-          <circle cx="7.5" cy="7.5" r="5.2"/>
-          <line x1="5.2" y1="7.5" x2="9.8" y2="7.5"/>
-          <line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/>
-        </svg>
-      </button>
-      <button class="zoom-btn" id="zoomIn" title="Vergrößern (Strg++)">
-        <svg viewBox="0 0 18 18" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-          <circle cx="7.5" cy="7.5" r="5.2"/>
-          <line x1="7.5" y1="5.2" x2="7.5" y2="9.8"/>
-          <line x1="5.2" y1="7.5" x2="9.8" y2="7.5"/>
-          <line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/>
-        </svg>
-      </button>
-    </div>
-  </section>
-
-  <!-- Main: Sidebar + Workspace -->
-  <main class="main">
-    <aside class="sidebar">
-      <div class="fleet-row">
-        <div class="fleet-select">FLEET <span>▼</span></div>
-        <div class="lock" title="Gesperrt">
-          <svg viewBox="0 0 14 16" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="10" height="8" rx="1"/><path d="M4 7V5a3 3 0 016 0v2"/></svg>
-        </div>
-      </div>
-      <div class="search-row">
-        <button id="collapseAll" class="collapse-all" title="Alle einklappen" aria-label="Alle einklappen"></button>
-        <div class="search-box">
-          <span class="search-loupe" aria-hidden="true"></span>
-          <input id="search" placeholder="Suche" title="Geben Sie einen Suchbegriff ein" aria-label="Geben Sie einen Suchbegriff ein" autocomplete="off" spellcheck="false" />
-          <button id="clear" class="search-clear" title="Suche löschen" aria-label="Suche löschen">×</button>
-        </div>
-      </div>
-      <div id="tree" class="tree" role="tree" aria-label="Protokollbaum"></div>
-    </aside>
-
-    <section class="workspace" id="workspace">
-      <div id="program" class="program-wrap"></div>
-    </section>
-  </main>
-
-
+  <header class="window-title"><div class="wt-left">myExam Cockpit - Explorer</div><div class="window-controls"><span title="Hilfe">?</span><span title="Maximieren">▢</span><span title="Schließen">×</span></div></header>
+  <section class="ribbon"><div class="ribbon-group"><div class="ribbon-title">Explorer</div><div class="ribbon-tabs"><span class="active">Browse</span><span>Importieren</span><span>Export</span></div></div><div class="ribbon-group"><div class="ribbon-title">Programm Editor</div><div class="ribbon-tabs r2"><span class="active">Bearbeiten</span><span>Simulieren</span></div></div></section>
+  <section class="toolbar"><div class="tool-left">
+    <button class="ico is-disabled" disabled title="Neu nicht verfügbar (Read-only)" aria-label="Neu nicht verfügbar"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="9" height="12" rx="1"/><polyline points="8,1 8,5 12,5"/><path d="M8 1l4 4"/></svg></button>
+    <button class="ico is-disabled" disabled title="Importieren nicht verfügbar (Read-only)" aria-label="Importieren nicht verfügbar"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="8" y1="5" x2="8" y2="11"/><polyline points="5,9 8,12 11,9"/></svg></button>
+    <span class="ico-sep"></span>
+    <button class="ico is-disabled" disabled title="Löschen nicht verfügbar (Read-only)" aria-label="Löschen nicht verfügbar"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3,4 13,4"/><path d="M5 4v9h6V4"/><polyline points="6,4 6,2 10,2 10,4"/></svg></button>
+    <button class="ico is-disabled" disabled title="Kopieren nicht verfügbar (Read-only)" aria-label="Kopieren nicht verfügbar"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="9" height="10" rx="1"/><path d="M3 11V2h9"/></svg></button>
+    <button class="ico is-disabled" disabled title="Einfügen nicht verfügbar (Read-only)" aria-label="Einfügen nicht verfügbar"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="10" height="11" rx="1"/><path d="M5 4V2h7v2"/><line x1="5" y1="8" x2="9" y2="8"/><line x1="5" y1="10" x2="9" y2="10"/></svg></button>
+    <span class="ico-sep"></span>
+    <button class="ico is-disabled" id="btnUndo" disabled title="Rückgängig nicht verfügbar (Read-only)" aria-label="Rückgängig nicht verfügbar"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8 C3 5 6 3 9 3 C12 3 14 5 14 8 C14 11 12 13 9 13"/><polyline points="3,5 3,8 6,8"/></svg></button>
+    <button class="ico is-disabled" id="btnRedo" disabled title="Wiederholen nicht verfügbar (Read-only)" aria-label="Wiederholen nicht verfügbar"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 8 C13 5 10 3 7 3 C4 3 2 5 2 8 C2 11 4 13 7 13"/><polyline points="13,5 13,8 10,8"/></svg></button>
+  </div><div class="toolbar-fill"></div><div class="zoom-controls"><button class="zoom-btn" id="zoomOut" title="Verkleinern (Strg+−)">-</button><button class="zoom-btn" id="zoomReset" title="100 % (Strg+0)" aria-label="Zoom zurücksetzen">100%</button><button class="zoom-btn" id="zoomIn" title="Vergrößern (Strg++)">+</button></div></section>
+  <main class="main"><aside class="sidebar"><div class="fleet-row"><div class="fleet-select">FLEET <span>▼</span></div><div class="lock" title="Gesperrt"><svg viewBox="0 0 14 16" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="10" height="8" rx="1"/><path d="M4 7V5a3 3 0 016 0v2"/></svg></div></div><div class="search-row"><button id="collapseAll" class="collapse-all" title="Alle einklappen" aria-label="Alle einklappen"></button><div class="search-box"><span class="search-loupe" aria-hidden="true"></span><input id="search" placeholder="Suche" title="Geben Sie einen Suchbegriff ein" aria-label="Geben Sie einen Suchbegriff ein" autocomplete="off" spellcheck="false" /><button id="clear" class="search-clear" title="Suche löschen" aria-label="Suche löschen">×</button></div></div><div id="tree" class="tree" role="tree" aria-label="Protokollbaum"></div></aside><section class="workspace" id="workspace"><div id="program" class="program-wrap"></div></section></main>
+  <div id="tree-context-menu" class="context-menu" role="menu" aria-label="Tree Kontextmenü"><button disabled>New Region</button><button disabled>New Exam</button><button disabled>New Directory</button><button disabled>New Program</button><hr><button disabled>Rename</button><button disabled>Delete</button><hr><button disabled>Edit Properties…</button><button data-action="find">Find…</button></div>
 </div>
 </body>
 </html>
