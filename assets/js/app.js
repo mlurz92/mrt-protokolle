@@ -177,8 +177,78 @@ function getDisplayCount(path, state, isFolder) {
   return base || (state.folderDirectMatches.get(path) || 0);
 }
 
-function applyZoom() { const p = document.getElementById('program'); if (p) p.style.zoom = String(zoomLevel); const out = document.getElementById('zoomOut'); const zin = document.getElementById('zoomIn'); if (out) out.disabled = zoomLevel <= ZOOM_STEPS[0]; if (zin) zin.disabled = zoomLevel >= ZOOM_STEPS.at(-1); }
+function applyZoom() { const p = document.getElementById('program'); if (p) p.style.zoom = String(zoomLevel); const out = document.getElementById('zoomOut'); const zin = document.getElementById('zoomIn'); if (out) out.disabled = zoomLevel <= ZOOM_STEPS[0]; if (zin) zin.disabled = zoomLevel >= ZOOM_STEPS.at(-1); const lvl = document.getElementById('zoomLevel'); if (lvl) lvl.textContent = `${Math.round(zoomLevel * 100)}%`; }
 function zoom(delta) { const i = ZOOM_STEPS.reduce((b, z, idx) => (Math.abs(z - zoomLevel) < Math.abs(ZOOM_STEPS[b] - zoomLevel) ? idx : b), 0); zoomLevel = ZOOM_STEPS[Math.max(0, Math.min(ZOOM_STEPS.length - 1, i + delta))]; applyZoom(); }
+
+/* ---- Statusleiste: Sequenzanzahl / Gesamtzeit je Lane (entlang des Decision-Default-Pfads) ---- */
+function parseTimeToSeconds(time) {
+  const parts = String(time ?? '').trim().split(':').filter((p) => p !== '');
+  if (!parts.length || parts.some((p) => Number.isNaN(Number(p)))) return 0;
+  return parts.reduce((acc, p) => acc * 60 + Number(p), 0);
+}
+function formatSecondsAsDuration(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+function pluralDe(n, singular, plural) { return n === 1 ? singular : plural; }
+function walkBlocksForStats(blocks, stats) {
+  for (const b of blocks || []) {
+    if (!b) continue;
+    /* Nur Zeilen mit Name UND Zeit sind echte Messsequenzen; Schritte wie "Kontrastmittel",
+       "MPR-Planung" oder "Autom. Start MR ..." haben einen Namen, aber keine Scanzeit. */
+    if (b.t === 'row') { if (b.name && b.time) { stats.count += 1; stats.seconds += parseTimeToSeconds(b.time); } continue; }
+    if (b.t === 'decision') {
+      const cols = b.cols || [];
+      const target = normalizeBasic(b.default || '');
+      const col = cols.find((c) => normalizeBasic(c.label || '') === target);
+      if (col) walkBlocksForStats(col.blocks, stats);
+    }
+  }
+}
+function computeProgramLaneStats(protocolPath) {
+  const s = specs[protocolPath];
+  const p = byPath[protocolPath];
+  const lanes = (s?.lanes) || [{ title: s?.title || p?.name, blocks: s?.blocks || [] }];
+  return lanes.map((lane) => {
+    const stats = { count: 0, seconds: 0 };
+    walkBlocksForStats(lane.blocks, stats);
+    return { title: lane.title || 'Standard', count: stats.count, seconds: stats.seconds };
+  });
+}
+function computeFolderProgramCounts(path) {
+  const children = getFolderChildren(path);
+  const directPrograms = children.filter((c) => c.type === 'program').length;
+  const directFolders = children.filter((c) => c.type === 'folder').length;
+  const prefix = path ? `${path} > ` : '';
+  const total = protocols.filter((p) => !path || p.path.startsWith(prefix)).length;
+  return { directPrograms, directFolders, total };
+}
+function renderStatusBar(state = getCurrentSearchState()) {
+  const bar = document.getElementById('status');
+  if (!bar) return;
+  const hitsHtml = state.active ? `<span class="status-sep"></span><span class="status-hits">Treffer: ${state.totalHits}</span>` : '';
+  if (state.active && state.totalHits === 0) {
+    bar.innerHTML = `<span class="status-path status-empty">${esc(formatDisplayPath(''))}</span>${hitsHtml}`;
+    return;
+  }
+  if (selectedNode.type === 'folder' && !isProgramPath(selectedNode.path)) {
+    const { directPrograms, directFolders, total } = computeFolderProgramCounts(selectedNode.path);
+    const parts = [];
+    if (directFolders) parts.push(`${directFolders} Unterordner`);
+    if (directPrograms) parts.push(`${directPrograms} ${pluralDe(directPrograms, 'Programm direkt', 'Programme direkt')}`);
+    parts.push(`${total} ${pluralDe(total, 'Programm gesamt', 'Programme gesamt')}`);
+    bar.innerHTML = `<span class="status-path">${esc(formatDisplayPath(selectedNode.path))}</span><span class="status-sep"></span><span class="status-stats">${esc(parts.join(' · '))}</span>${hitsHtml}`;
+    return;
+  }
+  const p = byPath[selectedNode.path] || protocols[0];
+  const laneStats = computeProgramLaneStats(p.path);
+  const statsHtml = laneStats.map((l) => `<span class="status-lane"><b>${esc(l.title)}</b>: ${l.count} ${pluralDe(l.count, 'Sequenz', 'Sequenzen')} · ${esc(formatSecondsAsDuration(l.seconds))}</span>`).join('');
+  bar.innerHTML = `<span class="status-path">${esc(formatDisplayPath(p.path))}</span><span class="status-sep"></span><span class="status-stats">${statsHtml}</span>${hitsHtml}`;
+}
 
 function renderTree() {
   const state = getCurrentSearchState();
@@ -202,25 +272,25 @@ function renderTree() {
   };
   rec(treeRoot, 0);
   tree.innerHTML = html.join('') || '<div class="no-results">Keine Treffer.</div>';
-  tree.querySelectorAll('.node.folder').forEach((el) => { el.onclick = () => { const p = el.dataset.folder; selectedNode = { type: 'folder', path: p }; if (!state.active) { if (openFolders.has(p)) openFolders.delete(p); else openFolders.add(p); } renderTree(); renderWorkspace(); }; });
-  tree.querySelectorAll('.node.item').forEach((el) => { el.onclick = () => { selectedNode = { type: 'program', path: el.dataset.path }; ensurePathOpen(el.dataset.path); renderTree(); renderWorkspace(); }; });
+  tree.querySelectorAll('.node.folder').forEach((el) => { el.onclick = () => { const p = el.dataset.folder; selectedNode = { type: 'folder', path: p }; if (!state.active) { if (openFolders.has(p)) openFolders.delete(p); else openFolders.add(p); } else addToSearchHistory(document.getElementById('search').value); renderTree(); renderWorkspace(); }; });
+  tree.querySelectorAll('.node.item').forEach((el) => { el.onclick = () => { selectedNode = { type: 'program', path: el.dataset.path }; ensurePathOpen(el.dataset.path); if (state.active) addToSearchHistory(document.getElementById('search').value); renderTree(); renderWorkspace(); }; });
 }
 
 function renderRow(b, state) { const blank = !b.name; return `<div class="row${blank ? ' blank' : ''}" title="${esc(blank ? '' : [b.name, b.time, b.pill].filter(Boolean).join(' · '))}"><div class="row-top"><span class="rname${blank ? ' rblank' : ''}">${highlightText(b.name || '', state)}</span>${b.time ? `<span class="rtime">${highlightText(b.time, state)}</span>` : ''}</div><div class="row-bot"><div class="ricons">${blank ? '' : PERSON_SVG}${b.badge ? `<span class="badge">${highlightText(b.badge, state)}</span>` : ''}</div>${b.pill ? `<span class="pill">${highlightText(b.pill, state)}</span>` : ''}</div></div>`; }
 function renderBlock(b, state) { if (!b) return ''; if (b.t === 'spacer') return `<div class="spacer" style="--spacer-rows:${Math.max(1, Number(b.n || 1) || 1)}"></div>`; if (b.t === 'label') return `<div class="label${b.tone === 'orange' ? ' orange' : ''}">${highlightText(b.text || '', state)}</div>`; if (b.t === 'decision') { const cols = b.cols || []; return `<div class="decision-q"><div class="dq-top"><span class="qtext">${highlightText(b.q || 'Decision', state)}</span></div><div class="dq-bot"><span class="dropdown">${highlightText(b.default || 'Nein', state)}</span><span class="pill">Basic Decision</span></div></div><div class="decision-title">${highlightText(b.title || b.q || 'Decision', state)}</div><div class="branch-grid" style="--bcols:${cols.length || 1}">${cols.map((c) => `<div class="branch"><div class="branch-head">${highlightText(c.label || '', state)}</div>${(c.blocks || []).map((x) => renderBlock(x, state)).join('')}</div>`).join('')}</div>`; } return renderRow(b, state); }
 
 function renderProgram(state = getCurrentSearchState()) { const p = byPath[selectedNode.path] || protocols[0]; selectedNode = { type: 'program', path: p.path }; const s = specs[p.path]; const lanes = (s?.lanes) || [{ title: s?.title || p.name, check: true, blocks: s?.blocks || [] }]; const w = s?.width || 380; const cols = lanes.map((l) => (l.weight ? `${l.weight}fr` : '1fr')).join(' ');
-  document.getElementById('program').innerHTML = `<div class="pathline"><span class="path-text">${highlightText(formatDisplayPath(p.path), state)}</span><span class="edit is-disabled" aria-disabled="true" title="Bearbeiten nicht verfügbar (Read-only)">✎</span></div><div class="program-frame" style="--pw:${w}px"><div class="viewtabs"><span data-view="patient" class="${activeView === 'patient' ? 'active' : ''}">Patient View</span><span data-view="basic" class="${activeView === 'basic' ? 'active' : ''}">Basic Patient View</span></div><div class="lanes" style="--cols:${cols}">${lanes.map((l) => `<section class="lane"><div class="lane-head">${l.check ? '<span class="tick">✓</span>' : ''}${highlightText(l.title || 'Standard', state)}</div><div class="flow">${(l.blocks || []).map((b) => renderBlock(b, state)).join('')}</div></section>`).join('')}</div></div>`;
+  document.getElementById('program').innerHTML = `<div class="pathline"><span class="path-text">${highlightText(formatDisplayPath(p.path), state)}</span><span class="edit is-disabled" aria-disabled="true" title="Bearbeiten nicht verfügbar (Read-only)"><svg class="icon" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><use href="#icon-edit"/></svg></span></div><div class="program-frame" style="--pw:${w}px"><div class="viewtabs"><span data-view="patient" class="${activeView === 'patient' ? 'active' : ''}">Patient View</span><span data-view="basic" class="${activeView === 'basic' ? 'active' : ''}">Basic Patient View</span></div><div class="lanes" style="--cols:${cols}">${lanes.map((l) => `<section class="lane"><div class="lane-head">${l.check ? '<span class="tick"><svg class="icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><use href="#icon-check"/></svg></span>' : ''}${highlightText(l.title || 'Standard', state)}</div><div class="flow">${(l.blocks || []).map((b) => renderBlock(b, state)).join('')}</div></section>`).join('')}</div></div>`;
   applyZoom(); }
 
 function renderFolderContent(path, state = getCurrentSearchState()) {
   const children = getFolderChildren(path);
-  document.getElementById('program').innerHTML = `<div class="pathline"><span class="path-text">${highlightText(formatDisplayPath(path), state)}</span><span class="edit is-disabled" aria-disabled="true" title="Bearbeiten nicht verfügbar (Read-only)">✎</span></div><div class="folder-content-view${state.active ? ' search-active' : ''}"><div class="folder-list">${children.map((c) => { const hitCount = getDisplayCount(c.path, state, c.type === 'folder'); const dim = state.active && hitCount === 0 ? ' dim-in-search' : ''; return `<div class="folder-content-row${dim}" data-type="${c.type}" data-path="${esc(c.path)}" tabindex="0"><span class="folder-content-icon ${c.type}"></span><span class="folder-content-name">${highlightText(c.name, state)}${state.active && hitCount > 0 ? ` <span class="search-count">[${hitCount}]</span>` : ''}</span></div>`; }).join('')}</div></div>`;
-  document.querySelectorAll('.folder-content-row').forEach((r) => { const open = () => { const type = r.dataset.type; const pathValue = r.dataset.path; selectedNode = { type, path: pathValue }; if (type === 'folder') openFolders.add(pathValue); ensurePathOpen(pathValue); renderTree(); renderWorkspace(); }; r.onclick = open; r.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }; });
+  document.getElementById('program').innerHTML = `<div class="pathline"><span class="path-text">${highlightText(formatDisplayPath(path), state)}</span><span class="edit is-disabled" aria-disabled="true" title="Bearbeiten nicht verfügbar (Read-only)"><svg class="icon" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><use href="#icon-edit"/></svg></span></div><div class="folder-content-view${state.active ? ' search-active' : ''}"><div class="folder-list">${children.map((c) => { const hitCount = getDisplayCount(c.path, state, c.type === 'folder'); const dim = state.active && hitCount === 0 ? ' dim-in-search' : ''; return `<div class="folder-content-row${dim}" data-type="${c.type}" data-path="${esc(c.path)}" tabindex="0"><span class="folder-content-icon ${c.type}"></span><span class="folder-content-name">${highlightText(c.name, state)}${state.active && hitCount > 0 ? ` <span class="search-count">[${hitCount}]</span>` : ''}</span></div>`; }).join('')}</div></div>`;
+  document.querySelectorAll('.folder-content-row').forEach((r) => { const open = () => { const type = r.dataset.type; const pathValue = r.dataset.path; selectedNode = { type, path: pathValue }; if (type === 'folder') openFolders.add(pathValue); ensurePathOpen(pathValue); if (state.active) addToSearchHistory(document.getElementById('search').value); renderTree(); renderWorkspace(); }; r.onclick = open; r.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }; });
 }
 
 function renderSearchEmpty(state) { document.getElementById('program').innerHTML = `<div class="pathline"><span class="path-text">${esc(formatDisplayPath(''))}</span></div><div class="search-empty">Keine Treffer für „${esc(state.display)}“.</div>`; }
-function renderWorkspace() { const state = getCurrentSearchState(); if (state.active && state.totalHits === 0) return renderSearchEmpty(state); if (selectedNode.type === 'folder' && !isProgramPath(selectedNode.path)) return renderFolderContent(selectedNode.path, state); return renderProgram(state); }
+function renderWorkspace() { const state = getCurrentSearchState(); renderStatusBar(state); if (state.active && state.totalHits === 0) return renderSearchEmpty(state); if (selectedNode.type === 'folder' && !isProgramPath(selectedNode.path)) return renderFolderContent(selectedNode.path, state); return renderProgram(state); }
 
 function updateSearchUIAfterQueryChange({ keepFocus = false } = {}) {
   const input = document.getElementById('search');
@@ -243,21 +313,148 @@ function selectFirstSearchResult() {
   return true;
 }
 
+/* ---- Suchverlauf (localStorage-basiert) --------------------- */
+const SEARCH_HISTORY_KEY = 'myexamSearchHistory_v1';
+const SEARCH_HISTORY_MAX = 10;
+let searchHistory = loadSearchHistory();
+let searchHistoryActiveIndex = -1;
+
+function loadSearchHistory() {
+  try {
+    const raw = window.localStorage.getItem(SEARCH_HISTORY_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter((t) => typeof t === 'string' && t.trim()).slice(0, SEARCH_HISTORY_MAX) : [];
+  } catch { return []; }
+}
+function persistSearchHistory() {
+  try { window.localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory)); } catch { /* Speicher nicht verfügbar, z.B. privater Modus */ }
+}
+function addToSearchHistory(term) {
+  const clean = String(term ?? '').trim();
+  if (!clean) return;
+  const key = normalizeBasic(clean);
+  searchHistory = [clean, ...searchHistory.filter((t) => normalizeBasic(t) !== key)].slice(0, SEARCH_HISTORY_MAX);
+  persistSearchHistory();
+}
+function clearSearchHistory() { searchHistory = []; persistSearchHistory(); }
+function getFilteredSearchHistory(query) {
+  const q = normalizeBasic(query || '');
+  if (!q) return searchHistory;
+  return searchHistory.filter((t) => normalizeBasic(t) !== q && normalizeBasic(t).includes(q));
+}
+function closeSearchHistoryDropdown() {
+  const box = document.getElementById('searchHistory');
+  if (box) { box.hidden = true; box.innerHTML = ''; }
+  searchHistoryActiveIndex = -1;
+  const input = document.getElementById('search');
+  input?.setAttribute('aria-expanded', 'false');
+  input?.removeAttribute('aria-activedescendant');
+}
+function selectSearchHistoryItem(term) {
+  const input = document.getElementById('search');
+  if (!input) return;
+  input.value = term;
+  addToSearchHistory(term);
+  updateSearchUIAfterQueryChange({ keepFocus: true });
+  closeSearchHistoryDropdown();
+}
+function getSearchHistoryOptionCount(query) {
+  const filtered = getFilteredSearchHistory(query);
+  return filtered.length ? filtered.length + 1 : 0; /* +1 = virtueller "Verlauf löschen"-Slot */
+}
+function showSearchHistoryClearedMessage() {
+  const input = document.getElementById('search');
+  const box = document.getElementById('searchHistory');
+  if (!input || !box) return;
+  searchHistoryActiveIndex = -1;
+  input.removeAttribute('aria-activedescendant');
+  input.setAttribute('aria-expanded', 'true');
+  box.hidden = false;
+  box.innerHTML = '<div class="search-history-empty">Kein Suchverlauf vorhanden.</div>';
+}
+function renderSearchHistoryDropdown() {
+  const input = document.getElementById('search');
+  const box = document.getElementById('searchHistory');
+  if (!input || !box) return;
+  const filtered = getFilteredSearchHistory(input.value);
+  if (!filtered.length) { closeSearchHistoryDropdown(); return; }
+  if (searchHistoryActiveIndex > filtered.length) searchHistoryActiveIndex = filtered.length;
+  const clearActive = searchHistoryActiveIndex === filtered.length;
+  const items = filtered.map((term, idx) => `<div class="search-history-item${idx === searchHistoryActiveIndex ? ' active' : ''}" role="option" id="search-history-item-${idx}" aria-selected="${idx === searchHistoryActiveIndex}" data-idx="${idx}"><svg class="icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><use href="#icon-history"/></svg><span class="term">${esc(term)}</span></div>`).join('');
+  const footer = `<div class="search-history-clear${clearActive ? ' active' : ''}" id="searchHistoryClearBtn" role="button" aria-label="Suchverlauf löschen"><svg class="icon" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><use href="#icon-trash"/></svg><span>Verlauf löschen</span></div>`;
+  box.innerHTML = items + footer;
+  box.hidden = false;
+  input.setAttribute('aria-expanded', 'true');
+  if (clearActive) input.setAttribute('aria-activedescendant', 'searchHistoryClearBtn');
+  else if (searchHistoryActiveIndex >= 0) input.setAttribute('aria-activedescendant', `search-history-item-${searchHistoryActiveIndex}`);
+  else input.removeAttribute('aria-activedescendant');
+  box.querySelectorAll('.search-history-item').forEach((el) => {
+    el.addEventListener('mousedown', (e) => { e.preventDefault(); selectSearchHistoryItem(filtered[Number(el.dataset.idx)]); });
+  });
+  box.querySelector('#searchHistoryClearBtn')?.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    clearSearchHistory();
+    showSearchHistoryClearedMessage();
+  });
+}
+
 document.getElementById('zoomIn')?.addEventListener('click', () => zoom(1));
 document.getElementById('zoomOut')?.addEventListener('click', () => zoom(-1));
-document.getElementById('search').addEventListener('input', () => updateSearchUIAfterQueryChange({ keepFocus: false }));
-document.getElementById('clear').addEventListener('click', () => { const s = document.getElementById('search'); s.value = ''; updateSearchUIAfterQueryChange({ keepFocus: true }); });
+document.getElementById('zoomLevel')?.addEventListener('click', () => { zoomLevel = 1; applyZoom(); });
+document.getElementById('search').addEventListener('input', () => { searchHistoryActiveIndex = -1; updateSearchUIAfterQueryChange({ keepFocus: false }); renderSearchHistoryDropdown(); });
+document.getElementById('search').addEventListener('focus', () => { searchHistoryActiveIndex = -1; renderSearchHistoryDropdown(); });
+document.getElementById('search').addEventListener('blur', () => closeSearchHistoryDropdown());
+document.getElementById('clear').addEventListener('click', () => { const s = document.getElementById('search'); s.value = ''; updateSearchUIAfterQueryChange({ keepFocus: true }); searchHistoryActiveIndex = -1; renderSearchHistoryDropdown(); });
 document.getElementById('collapseAll')?.addEventListener('click', () => { openFolders.clear(); ensurePathOpen(selectedNode.path); renderTree(); });
 
 document.addEventListener('keydown', (e) => {
   const se = document.getElementById('search');
   const on = document.activeElement === se;
-  if (e.ctrlKey && (e.key === '+' || e.key === '=')) { e.preventDefault(); zoom(1); }
-  if (e.ctrlKey && e.key === '-') { e.preventDefault(); zoom(-1); }
-  if (e.ctrlKey && e.key === '0') { e.preventDefault(); zoomLevel = 1; applyZoom(); }
-  if (e.ctrlKey && (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'e')) { e.preventDefault(); se.focus(); se.select(); }
-  if (e.key === 'Escape' && on) { e.preventDefault(); if (se.value.trim()) { se.value = ''; updateSearchUIAfterQueryChange({ keepFocus: true }); } else se.blur(); }
-  if (e.key === 'Enter' && on) { e.preventDefault(); selectFirstSearchResult(); }
+  const historyBox = document.getElementById('searchHistory');
+  const historyOpen = Boolean(on && historyBox && !historyBox.hidden);
+
+  if (e.ctrlKey && (e.key === '+' || e.key === '=')) { e.preventDefault(); zoom(1); return; }
+  if (e.ctrlKey && e.key === '-') { e.preventDefault(); zoom(-1); return; }
+  if (e.ctrlKey && e.key === '0') { e.preventDefault(); zoomLevel = 1; applyZoom(); return; }
+  if (e.ctrlKey && (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'e')) { e.preventDefault(); se.focus(); se.select(); return; }
+
+  if (on && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+    const count = getSearchHistoryOptionCount(se.value);
+    if (!count) return;
+    e.preventDefault();
+    if (!historyOpen) {
+      searchHistoryActiveIndex = e.key === 'ArrowDown' ? 0 : count - 1;
+      renderSearchHistoryDropdown();
+      return;
+    }
+    const delta = e.key === 'ArrowDown' ? 1 : -1;
+    searchHistoryActiveIndex = (searchHistoryActiveIndex + delta + count) % count;
+    renderSearchHistoryDropdown();
+    return;
+  }
+
+  if (e.key === 'Enter' && on) {
+    e.preventDefault();
+    if (historyOpen && searchHistoryActiveIndex >= 0) {
+      const filtered = getFilteredSearchHistory(se.value);
+      if (searchHistoryActiveIndex === filtered.length) { clearSearchHistory(); showSearchHistoryClearedMessage(); return; }
+      if (filtered[searchHistoryActiveIndex]) { selectSearchHistoryItem(filtered[searchHistoryActiveIndex]); return; }
+    }
+    closeSearchHistoryDropdown();
+    if (selectFirstSearchResult()) addToSearchHistory(se.value);
+    return;
+  }
+
+  if (e.key === 'Escape' && on) {
+    e.preventDefault();
+    if (historyOpen) { closeSearchHistoryDropdown(); return; }
+    if (se.value.trim()) {
+      se.value = '';
+      updateSearchUIAfterQueryChange({ keepFocus: true });
+      searchHistoryActiveIndex = -1;
+      renderSearchHistoryDropdown();
+    } else se.blur();
+  }
 });
 
 document.getElementById('workspace').addEventListener('wheel', (e) => { if (!e.ctrlKey) return; e.preventDefault(); zoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
