@@ -135,6 +135,15 @@ Suchen werden über `lastSearchRaw`/`lastSearchState` gecacht und bei Eingabeän
 - **Toolbar-Konsistenz:** Zoomstufen-Anzeige (`#zoomLevel`) ist jetzt genauso eckig (`border-radius:0`) wie ihre Geschwister-Buttons; deaktivierte Toolbar-/Bearbeiten-Icons sind von `opacity:.38` auf `.5` angehoben (weiterhin klar als Read-only erkennbar, aber nicht mehr nahezu unsichtbar).
 - **Mobile-Layout repariert:** Zwei sich widersprechende `@media (max-width:680px)`-Regeln (eine blendete die Sidebar aus, eine spätere zeigte sie wieder an) führten zu einem zusammengequetschten, kaum bedienbaren Layout. Jetzt eine einzige konsolidierte Regel: Sidebar oben (mit eigenem Scrollbereich, `minmax(160px, 38vh)`), Workspace darunter, beide vollbreit nutzbar.
 
+### 10.2 Kollisionsschutz innerhalb von Sequenz-/Decision-Kästchen
+Sequenzname, Zeit, Badge und Pill-Label (z. B. „Basic Decision“, „MPR Assignment“) sitzen in festen Reihen mit begrenzter Breite (Lane-/Branch-Spalten sind teils nur ~⅓ der Programmbreite). Ein Vollaudit über alle 60 Programme sowie ein Stresstest mit synthetisch überlangen Texten (4 Branch-Spalten, absichtlich zu lange Namen/Pills/Defaults) deckte auf, dass einzelne Elemente bei ausreichend langem Text **strukturell** hätten kollidieren können, auch wenn die aktuellen Echtdaten (noch) knapp passen:
+- `.dropdown` (Decision-Default-Anzeige, z. B. „Mikroadenom (inkl. Dynamik)“) hatte keinerlei Overflow-Schutz und wuchs mit dem Text unbegrenzt, während die danebenliegende `.pill` `flex-shrink:0` hatte – bei nur wenig längerem Text wäre eine Kollision unausweichlich gewesen.
+- `.branch-head` (Spaltenüberschrift im Decision-Branch-Grid) hatte kein `text-overflow:ellipsis`, ein zu langes Label hätte optisch in die Nachbarspalte hineinlaufen können.
+- `.decision-title` hatte kein `white-space:nowrap`, ein zu langer Titel hätte auf zwei Zeilen umgebrochen und in die Branch-Grid-Zeile darunter bluten können (keine Höhenbegrenzung mit Overflow-Schutz).
+- `.pill` und `.badge` hatten `flex-shrink:0` ohne jede Ellipsis-Absicherung.
+
+Behoben durch strukturelle (nicht nur kosmetische) Absicherung: `.dropdown` besitzt jetzt `max-width:60%` mit innerem `.dropdown-text` (Ellipsis); `.pill` ist auf `flex:0 1 auto` mit innerem `.pill-text` (Ellipsis) umgestellt, das feste Kreis-/Dreieck-Icon bleibt via `flex-shrink:0` unverändert; `.badge` hat `max-width` + Ellipsis als Sicherheitsnetz; `.branch-head` und `.decision-title` erhielten `overflow:hidden`/`text-overflow:ellipsis`/`white-space:nowrap`. `.row-bot`/`.dq-bot` haben zusätzlich ein garantiertes `gap:8px`, damit auch im Extremfall ein Mindestabstand bestehen bleibt. Alle trunkierten Elemente tragen ein `title`-Attribut mit dem vollständigen Text (Tooltip bei Hover). Damit ist die Kollisionsfreiheit **unabhängig von zukünftigen Datenänderungen strukturell garantiert**, nicht nur für den aktuellen Datenstand empirisch geprüft.
+
 ## 11) Accessibility-Basics
 - Suchfeld mit `title` und `aria-label`.
 - Tree-Container mit `role="tree"` und sprechendem Label.
@@ -168,6 +177,7 @@ Aufruf im Browser: `http://localhost:8000`
 - Zoomstufen-Anzeige und Reset per Klick prüfen.
 - Tree-Icons (Ordner/Programm) auf visuelle Übereinstimmung mit den Flachlisten-Icons prüfen.
 - Mobile-Layout (≤680px) prüfen: Sidebar oben, Workspace darunter, beide bedienbar.
+- Kollisionsfreiheit in Sequenz-/Decision-Kästchen prüfen: Name/Zeit/Badge/Pill/Dropdown dürfen sich bei langen Texten nie überlagern, sondern müssen ellipsieren (`…`).
 
 ## 15) Wartungshinweise
 - Neue Suchfelder nur hinzufügen, wenn sie auch sichtbar gerendert werden.
