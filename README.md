@@ -127,6 +127,14 @@ Suchen werden über `lastSearchRaw`/`lastSearchState` gecacht und bei Eingabeän
 - keine doppelten Pseudo-Icons (Tree-Icons konsolidiert).
 - einheitliches SVG-Icon-System: ein zentrales `<symbol>`-Sprite in `index.html` (Fenstersteuerung, Bearbeiten-Stift, Häkchen, Suchverlauf, Papierkorb) sowie CSS-Masken für rein dekorative Symbole (Baum-Chevrons, Dropdown-Pfeil, Pill-Symbol) ersetzen alle früheren Text-/Unicode-Glyphen (`✓`, `✎`, `×`, `▸`, `▾`, `▶`, `?`, `▢`).
 
+### 10.1 Detail-Politur (Icons, Selektion, Empty-States, Mobile)
+- **Tree-Icons vereinheitlicht:** Die Explorer-Baum-Icons (`.node-icon.folder-icon`/`.program-icon`) nutzten zuvor stumpfe einfarbige Rechtecke, während dieselben Ordner/Programme in der rechten Flachlisten-Ansicht (`.folder-content-icon`) ein plastisches gelbes Ordner- bzw. helles Dokument-Symbol erhielten. Beide Darstellungen sind jetzt identisch (gleiches Gradient/Clip-Path), sodass Baum und Flachliste dieselbe Formsprache für dieselbe Entität zeigen.
+- **Selektions-Akzent:** Ausgewählte Baumknoten und fokussierte Ordner-Flachlisten-Zeilen erhalten zusätzlich zum Hell/Dunkel-Wechsel eine orangene Kennlinie links (`box-shadow: inset 3px 0 0 var(--orange2)`), konsistent mit dem Lane-/Highlight-Akzent des restlichen UIs.
+- **Empty-States überarbeitet:** „Keine Treffer.“ (Baum) und „Keine Treffer für „…“.“ (Workspace) waren zuvor unzentrierter, gewichtsloser Fließtext im leeren Raum. Beide zeigen jetzt ein zentriertes Lupen-Symbol und sind vertikal in ihrem verfügbaren Bereich zentriert (Flexbox-Höhenmodell über `.workspace`/`.program-wrap`, nicht über unzuverlässige `height:100%`-Prozentwerte ohne definierten Elternkontext).
+- **Suchverlauf-Dropdown:** sanftes Einblenden (`@keyframes searchHistoryIn`, 100 ms) statt hartem Pop-in; Farbe des „Verlauf löschen“-Eintrags nutzt jetzt `var(--orange2)` statt eines bisherigen, isolierten Amber-Tons – ein einheitlicher Akzentfarbwert für die gesamte App.
+- **Toolbar-Konsistenz:** Zoomstufen-Anzeige (`#zoomLevel`) ist jetzt genauso eckig (`border-radius:0`) wie ihre Geschwister-Buttons; deaktivierte Toolbar-/Bearbeiten-Icons sind von `opacity:.38` auf `.5` angehoben (weiterhin klar als Read-only erkennbar, aber nicht mehr nahezu unsichtbar).
+- **Mobile-Layout repariert:** Zwei sich widersprechende `@media (max-width:680px)`-Regeln (eine blendete die Sidebar aus, eine spätere zeigte sie wieder an) führten zu einem zusammengequetschten, kaum bedienbaren Layout. Jetzt eine einzige konsolidierte Regel: Sidebar oben (mit eigenem Scrollbereich, `minmax(160px, 38vh)`), Workspace darunter, beide vollbreit nutzbar.
+
 ## 11) Accessibility-Basics
 - Suchfeld mit `title` und `aria-label`.
 - Tree-Container mit `role="tree"` und sprechendem Label.
@@ -158,6 +166,8 @@ Aufruf im Browser: `http://localhost:8000`
 - Statusleiste bei Programm-/Ordnerauswahl sowie bei aktiver Suche prüfen (Pfad, Sequenzzahl, Zeit, Treffer).
 - Suchverlauf prüfen: Speichern bei Enter/Klick, Filterung, Tastaturnavigation, Escape-Reihenfolge (erst Dropdown, dann Suche), „Verlauf löschen“.
 - Zoomstufen-Anzeige und Reset per Klick prüfen.
+- Tree-Icons (Ordner/Programm) auf visuelle Übereinstimmung mit den Flachlisten-Icons prüfen.
+- Mobile-Layout (≤680px) prüfen: Sidebar oben, Workspace darunter, beide bedienbar.
 
 ## 15) Wartungshinweise
 - Neue Suchfelder nur hinzufügen, wenn sie auch sichtbar gerendert werden.
