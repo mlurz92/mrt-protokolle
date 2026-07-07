@@ -15,9 +15,9 @@
 Die Anwendung arbeitet vollständig im Browser und benötigt kein Build-System.
 
 ### 3.2 Kernmodule
-- `index.html`: statisches Shell-Layout (Titelzeile, Ribbon, Toolbar, Sidebar, Workspace).
-- `assets/js/app.js`: Tree-Aufbau, Suchindex, Search-State, Rendering, Eventhandling, Zoom.
-- `assets/css/myexam-cockpit.css`: Workstation-Styling, Tree, Search, Programmansicht, Folder-Listen.
+- `index.html`: statisches Shell-Layout (Titelzeile, Ribbon, Toolbar, Sidebar, Workspace, Statusleiste) + zentrales SVG-Icon-Sprite.
+- `assets/js/app.js`: Tree-Aufbau, Suchindex, Search-State, Rendering, Eventhandling, Zoom, Statusleisten-Statistik, Suchverlauf (`localStorage`).
+- `assets/css/myexam-cockpit.css`: Workstation-Styling, Tree, Search, Programmansicht, Folder-Listen, Statusleiste, Suchverlauf-Dropdown.
 - `data/protocol-database.js`: bindet `window.MYEXAM_PROTOCOL_DATABASE` ein.
 - `data/protocol-database.json`: medizinische Rohdaten (Protokolle + Specs).
 
@@ -101,16 +101,35 @@ Suchen werden über `lastSearchRaw`/`lastSearchState` gecacht und bei Eingabeän
 ### 9.5 Shortcuts
 - `Ctrl+F` und `Ctrl+E`: Fokus + Selektieren des Suchtexts.
 - `Ctrl++`, `Ctrl+-`, `Ctrl+0`: Zoomsteuerung.
+- Zoomstufe wird in der Toolbar zwischen den Lupen-Buttons live angezeigt (`#zoomLevel`); Klick darauf setzt auf 100 % zurück (äquivalent zu `Ctrl+0`).
+
+### 9.6 Statusleiste
+- Aktiv unten in der App (`#status`, `aria-live="polite"`), zeigt je nach Auswahl:
+  - **Programm ausgewählt:** vollständiger Pfad + je Lane Sequenzanzahl und Gesamtdauer.
+  - **Ordner ausgewählt:** vollständiger Pfad + Anzahl Unterordner, Anzahl direkter Programme, Gesamtanzahl Programme im Unterbaum.
+  - **Aktive Suche:** zusätzlich `Treffer: n` (Gesamttrefferzahl aus dem Search-State).
+- Sequenz-/Zeitberechnung pro Lane (`computeProgramLaneStats`) folgt dem **Decision-Default-Pfad**: Bei jeder Decision wird nur die Spalte gezählt, deren Label dem `default`-Wert entspricht (normalisiert); gibt es keine passende Spalte (z. B. Default „Nein“ ohne gleichnamige Spalte), tragen deren Unterblöcke bewusst nichts zur Summe bei. Leere/`spacer`-Blöcke zählen nie mit.
+- Zeiten werden aus `mm:ss`-Strings addiert und als `m:ss` bzw. `h:mm:ss` (`formatSecondsAsDuration`) formatiert.
+
+### 9.7 Suchverlauf
+- Persistiert in `localStorage` (`myexamSearchHistory_v1`, max. 10 Einträge, neueste zuerst, Duplikate case-/separator-tolerant dedupliziert).
+- Dropdown unter dem Suchfeld (`#searchHistory`) öffnet bei Fokus (zeigt volle Historie) bzw. während der Eingabe (gefiltert auf Teiltreffer, exakte Übereinstimmung mit dem aktuellen Text wird ausgeblendet).
+- Bedienung: Maus-Klick übernimmt einen Eintrag; `↑`/`↓` wandert durch die Liste; `Enter` übernimmt den aktiven Eintrag (oder navigiert wie gehabt zum ersten Suchtreffer, falls kein Eintrag aktiv ist); `Escape` schließt zunächst nur das Dropdown, ein zweites `Escape` löscht danach wie gewohnt die Suche.
+- „Verlauf löschen“ leert die Liste sofort und dauerhaft (`localStorage`).
+- Neue Einträge werden bei jeder erfolgreichen Sucheingabe-Navigation gespeichert: `Enter` mit Treffer, Klick auf einen Tree-Knoten während aktiver Suche, Klick auf eine Zeile in der Ordner-Flachliste während aktiver Suche.
 
 ## 10) Visuelle Gestaltung
 - dunkles Grundtheme, orange Lane-Akzente, gelbe Suchakzente.
 - kompakte Tree-Reihen, klare Trennlinien, keine Card-UI im rechten Ordnerbereich.
 - keine doppelten Pseudo-Icons (Tree-Icons konsolidiert).
+- einheitliches SVG-Icon-System: ein zentrales `<symbol>`-Sprite in `index.html` (Fenstersteuerung, Bearbeiten-Stift, Häkchen, Suchverlauf, Papierkorb) sowie CSS-Masken für rein dekorative Symbole (Baum-Chevrons, Dropdown-Pfeil, Pill-Symbol) ersetzen alle früheren Text-/Unicode-Glyphen (`✓`, `✎`, `×`, `▸`, `▾`, `▶`, `?`, `▢`).
 
 ## 11) Accessibility-Basics
 - Suchfeld mit `title` und `aria-label`.
 - Tree-Container mit `role="tree"` und sprechendem Label.
 - Knoten sind fokussierbar und mit `aria-selected`/`aria-expanded` versehen.
+- Suchfeld ist als `role="combobox"` mit `aria-expanded`/`aria-controls` an das Suchverlauf-Listbox-Popup gekoppelt.
+- Statusleiste ist eine `aria-live="polite"`-Region.
 
 ## 12) Nicht-Ziele
 - keine Framework-Migration (React/Vue/Svelte).
@@ -133,6 +152,9 @@ Aufruf im Browser: `http://localhost:8000`
 - Klickpfade in Tree und Folderliste prüfen.
 - Empty-State prüfen.
 - Zoom/Responsive Breiten prüfen.
+- Statusleiste bei Programm-/Ordnerauswahl sowie bei aktiver Suche prüfen (Pfad, Sequenzzahl, Zeit, Treffer).
+- Suchverlauf prüfen: Speichern bei Enter/Klick, Filterung, Tastaturnavigation, Escape-Reihenfolge (erst Dropdown, dann Suche), „Verlauf löschen“.
+- Zoomstufen-Anzeige und Reset per Klick prüfen.
 
 ## 15) Wartungshinweise
 - Neue Suchfelder nur hinzufügen, wenn sie auch sichtbar gerendert werden.
