@@ -1151,5 +1151,5 @@ mark,
   border-top: 1px solid #4a4f49;
   background: #2f322e;
 }
-.search-history-clear:hover { background: #3a3e37; color: #e0b47f; }
-.search-history-clear.active { background: #3a3e37; }
+.search-history-clear:hover,
+.search-history-clear.active { background: #3a3e37; color: #e0b47f; }

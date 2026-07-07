@@ -194,10 +194,13 @@ function formatSecondsAsDuration(totalSeconds) {
   const pad = (n) => String(n).padStart(2, '0');
   return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
 }
+function pluralDe(n, singular, plural) { return n === 1 ? singular : plural; }
 function walkBlocksForStats(blocks, stats) {
   for (const b of blocks || []) {
     if (!b) continue;
-    if (b.t === 'row') { if (b.name) { stats.count += 1; stats.seconds += parseTimeToSeconds(b.time); } continue; }
+    /* Nur Zeilen mit Name UND Zeit sind echte Messsequenzen; Schritte wie "Kontrastmittel",
+       "MPR-Planung" oder "Autom. Start MR ..." haben einen Namen, aber keine Scanzeit. */
+    if (b.t === 'row') { if (b.name && b.time) { stats.count += 1; stats.seconds += parseTimeToSeconds(b.time); } continue; }
     if (b.t === 'decision') {
       const cols = b.cols || [];
       const target = normalizeBasic(b.default || '');
@@ -236,14 +239,14 @@ function renderStatusBar(state = getCurrentSearchState()) {
     const { directPrograms, directFolders, total } = computeFolderProgramCounts(selectedNode.path);
     const parts = [];
     if (directFolders) parts.push(`${directFolders} Unterordner`);
-    if (directPrograms) parts.push(`${directPrograms} Programm(e) direkt`);
-    parts.push(`${total} Programm(e) gesamt`);
+    if (directPrograms) parts.push(`${directPrograms} ${pluralDe(directPrograms, 'Programm direkt', 'Programme direkt')}`);
+    parts.push(`${total} ${pluralDe(total, 'Programm gesamt', 'Programme gesamt')}`);
     bar.innerHTML = `<span class="status-path">${esc(formatDisplayPath(selectedNode.path))}</span><span class="status-sep"></span><span class="status-stats">${esc(parts.join(' · '))}</span>${hitsHtml}`;
     return;
   }
   const p = byPath[selectedNode.path] || protocols[0];
   const laneStats = computeProgramLaneStats(p.path);
-  const statsHtml = laneStats.map((l) => `<span class="status-lane"><b>${esc(l.title)}</b>: ${l.count} Sequenz(en) · ${esc(formatSecondsAsDuration(l.seconds))} min</span>`).join('');
+  const statsHtml = laneStats.map((l) => `<span class="status-lane"><b>${esc(l.title)}</b>: ${l.count} ${pluralDe(l.count, 'Sequenz', 'Sequenzen')} · ${esc(formatSecondsAsDuration(l.seconds))}</span>`).join('');
   bar.innerHTML = `<span class="status-path">${esc(formatDisplayPath(p.path))}</span><span class="status-sep"></span><span class="status-stats">${statsHtml}</span>${hitsHtml}`;
 }
 
@@ -343,7 +346,9 @@ function closeSearchHistoryDropdown() {
   const box = document.getElementById('searchHistory');
   if (box) { box.hidden = true; box.innerHTML = ''; }
   searchHistoryActiveIndex = -1;
-  document.getElementById('search')?.setAttribute('aria-expanded', 'false');
+  const input = document.getElementById('search');
+  input?.setAttribute('aria-expanded', 'false');
+  input?.removeAttribute('aria-activedescendant');
 }
 function selectSearchHistoryItem(term) {
   const input = document.getElementById('search');
@@ -353,25 +358,43 @@ function selectSearchHistoryItem(term) {
   updateSearchUIAfterQueryChange({ keepFocus: true });
   closeSearchHistoryDropdown();
 }
+function getSearchHistoryOptionCount(query) {
+  const filtered = getFilteredSearchHistory(query);
+  return filtered.length ? filtered.length + 1 : 0; /* +1 = virtueller "Verlauf löschen"-Slot */
+}
+function showSearchHistoryClearedMessage() {
+  const input = document.getElementById('search');
+  const box = document.getElementById('searchHistory');
+  if (!input || !box) return;
+  searchHistoryActiveIndex = -1;
+  input.removeAttribute('aria-activedescendant');
+  input.setAttribute('aria-expanded', 'true');
+  box.hidden = false;
+  box.innerHTML = '<div class="search-history-empty">Kein Suchverlauf vorhanden.</div>';
+}
 function renderSearchHistoryDropdown() {
   const input = document.getElementById('search');
   const box = document.getElementById('searchHistory');
   if (!input || !box) return;
   const filtered = getFilteredSearchHistory(input.value);
   if (!filtered.length) { closeSearchHistoryDropdown(); return; }
-  if (searchHistoryActiveIndex >= filtered.length) searchHistoryActiveIndex = filtered.length - 1;
-  const items = filtered.map((term, idx) => `<div class="search-history-item${idx === searchHistoryActiveIndex ? ' active' : ''}" role="option" aria-selected="${idx === searchHistoryActiveIndex}" data-idx="${idx}"><svg class="icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><use href="#icon-history"/></svg><span class="term">${esc(term)}</span></div>`).join('');
-  const footer = `<div class="search-history-clear" id="searchHistoryClearBtn" role="option"><svg class="icon" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><use href="#icon-trash"/></svg><span>Verlauf löschen</span></div>`;
+  if (searchHistoryActiveIndex > filtered.length) searchHistoryActiveIndex = filtered.length;
+  const clearActive = searchHistoryActiveIndex === filtered.length;
+  const items = filtered.map((term, idx) => `<div class="search-history-item${idx === searchHistoryActiveIndex ? ' active' : ''}" role="option" id="search-history-item-${idx}" aria-selected="${idx === searchHistoryActiveIndex}" data-idx="${idx}"><svg class="icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><use href="#icon-history"/></svg><span class="term">${esc(term)}</span></div>`).join('');
+  const footer = `<div class="search-history-clear${clearActive ? ' active' : ''}" id="searchHistoryClearBtn" role="button" aria-label="Suchverlauf löschen"><svg class="icon" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><use href="#icon-trash"/></svg><span>Verlauf löschen</span></div>`;
   box.innerHTML = items + footer;
   box.hidden = false;
   input.setAttribute('aria-expanded', 'true');
+  if (clearActive) input.setAttribute('aria-activedescendant', 'searchHistoryClearBtn');
+  else if (searchHistoryActiveIndex >= 0) input.setAttribute('aria-activedescendant', `search-history-item-${searchHistoryActiveIndex}`);
+  else input.removeAttribute('aria-activedescendant');
   box.querySelectorAll('.search-history-item').forEach((el) => {
     el.addEventListener('mousedown', (e) => { e.preventDefault(); selectSearchHistoryItem(filtered[Number(el.dataset.idx)]); });
   });
   box.querySelector('#searchHistoryClearBtn')?.addEventListener('mousedown', (e) => {
     e.preventDefault();
     clearSearchHistory();
-    box.innerHTML = '<div class="search-history-empty">Kein Suchverlauf vorhanden.</div>';
+    showSearchHistoryClearedMessage();
   });
 }
 
@@ -395,14 +418,18 @@ document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.key === '0') { e.preventDefault(); zoomLevel = 1; applyZoom(); return; }
   if (e.ctrlKey && (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'e')) { e.preventDefault(); se.focus(); se.select(); return; }
 
-  if (historyOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+  if (on && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+    const count = getSearchHistoryOptionCount(se.value);
+    if (!count) return;
     e.preventDefault();
-    const count = getFilteredSearchHistory(se.value).length;
-    if (count) {
-      const delta = e.key === 'ArrowDown' ? 1 : -1;
-      searchHistoryActiveIndex = (searchHistoryActiveIndex + delta + count) % count;
+    if (!historyOpen) {
+      searchHistoryActiveIndex = e.key === 'ArrowDown' ? 0 : count - 1;
       renderSearchHistoryDropdown();
+      return;
     }
+    const delta = e.key === 'ArrowDown' ? 1 : -1;
+    searchHistoryActiveIndex = (searchHistoryActiveIndex + delta + count) % count;
+    renderSearchHistoryDropdown();
     return;
   }
 
@@ -410,6 +437,7 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (historyOpen && searchHistoryActiveIndex >= 0) {
       const filtered = getFilteredSearchHistory(se.value);
+      if (searchHistoryActiveIndex === filtered.length) { clearSearchHistory(); showSearchHistoryClearedMessage(); return; }
       if (filtered[searchHistoryActiveIndex]) { selectSearchHistoryItem(filtered[searchHistoryActiveIndex]); return; }
     }
     closeSearchHistoryDropdown();
@@ -420,7 +448,12 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && on) {
     e.preventDefault();
     if (historyOpen) { closeSearchHistoryDropdown(); return; }
-    if (se.value.trim()) { se.value = ''; updateSearchUIAfterQueryChange({ keepFocus: true }); } else se.blur();
+    if (se.value.trim()) {
+      se.value = '';
+      updateSearchUIAfterQueryChange({ keepFocus: true });
+      searchHistoryActiveIndex = -1;
+      renderSearchHistoryDropdown();
+    } else se.blur();
   }
 });
 

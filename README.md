@@ -108,14 +108,17 @@ Suchen werden über `lastSearchRaw`/`lastSearchState` gecacht und bei Eingabeän
   - **Programm ausgewählt:** vollständiger Pfad + je Lane Sequenzanzahl und Gesamtdauer.
   - **Ordner ausgewählt:** vollständiger Pfad + Anzahl Unterordner, Anzahl direkter Programme, Gesamtanzahl Programme im Unterbaum.
   - **Aktive Suche:** zusätzlich `Treffer: n` (Gesamttrefferzahl aus dem Search-State).
-- Sequenz-/Zeitberechnung pro Lane (`computeProgramLaneStats`) folgt dem **Decision-Default-Pfad**: Bei jeder Decision wird nur die Spalte gezählt, deren Label dem `default`-Wert entspricht (normalisiert); gibt es keine passende Spalte (z. B. Default „Nein“ ohne gleichnamige Spalte), tragen deren Unterblöcke bewusst nichts zur Summe bei. Leere/`spacer`-Blöcke zählen nie mit.
-- Zeiten werden aus `mm:ss`-Strings addiert und als `m:ss` bzw. `h:mm:ss` (`formatSecondsAsDuration`) formatiert.
+- Sequenz-/Zeitberechnung pro Lane (`computeProgramLaneStats`) folgt dem **Decision-Default-Pfad**: Bei jeder Decision wird nur die Spalte gezählt, deren Label dem `default`-Wert entspricht (normalisiert); gibt es keine passende Spalte (z. B. Default „Nein“ ohne gleichnamige Spalte), tragen deren Unterblöcke bewusst nichts zur Summe bei.
+- Als **Sequenz** zählt ausschließlich eine `row` mit **Name UND Zeitangabe** – reine Aktionsschritte ohne Scanzeit (z. B. „Kontrastmittel“, „MPR-Planung“, „MPR-Planung t“, „Autom. Start MR …“, „auf Gehirn zentrieren“) haben zwar einen sichtbaren Namen, sind aber keine Messsequenzen und fließen bewusst weder in die Zählung noch in die Zeitsumme ein. Leere/`spacer`-Blöcke zählen ebenfalls nie mit.
+- Zeiten werden aus `mm:ss`-Strings addiert und als `m:ss` bzw. `h:mm:ss` (`formatSecondsAsDuration`) formatiert – ohne Einheiten-Suffix, konsistent mit der bestehenden Zeitanzeige in den Sequenzzeilen (`.rtime`).
+- Deutsche Pluralregeln werden korrekt angewendet (`pluralDe`): „1 Sequenz“ vs. „6 Sequenzen“, „1 Programm gesamt“ vs. „42 Programme gesamt“.
 
 ### 9.7 Suchverlauf
 - Persistiert in `localStorage` (`myexamSearchHistory_v1`, max. 10 Einträge, neueste zuerst, Duplikate case-/separator-tolerant dedupliziert).
 - Dropdown unter dem Suchfeld (`#searchHistory`) öffnet bei Fokus (zeigt volle Historie) bzw. während der Eingabe (gefiltert auf Teiltreffer, exakte Übereinstimmung mit dem aktuellen Text wird ausgeblendet).
-- Bedienung: Maus-Klick übernimmt einen Eintrag; `↑`/`↓` wandert durch die Liste; `Enter` übernimmt den aktiven Eintrag (oder navigiert wie gehabt zum ersten Suchtreffer, falls kein Eintrag aktiv ist); `Escape` schließt zunächst nur das Dropdown, ein zweites `Escape` löscht danach wie gewohnt die Suche.
-- „Verlauf löschen“ leert die Liste sofort und dauerhaft (`localStorage`).
+- Bedienung: Maus-Klick übernimmt einen Eintrag; `↑`/`↓` wandert durch die Liste **inklusive** dem abschließenden „Verlauf löschen“-Eintrag (voller Tastatur-/Maus-Gleichlauf, kein rein mausbedienbares Element); `Enter` übernimmt den aktiven Eintrag bzw. löscht den Verlauf, wenn „Verlauf löschen“ aktiv markiert ist (oder navigiert wie gehabt zum ersten Suchtreffer, falls kein Eintrag aktiv ist); `Escape` schließt zunächst nur das Dropdown, ein zweites `Escape` löscht danach wie gewohnt die Suche.
+- „Verlauf löschen“ (Maus oder Tastatur) leert die Liste sofort und dauerhaft (`localStorage`) und zeigt danach den Hinweis „Kein Suchverlauf vorhanden.“ im weiterhin geöffneten Dropdown.
+- Vollständige ARIA-Kopplung: Suchfeld ist `role="combobox"`, Dropdown ist `role="listbox"` mit `role="option"`-Einträgen; `aria-activedescendant` verweist stets auf den per Tastatur aktiven Eintrag.
 - Neue Einträge werden bei jeder erfolgreichen Sucheingabe-Navigation gespeichert: `Enter` mit Treffer, Klick auf einen Tree-Knoten während aktiver Suche, Klick auf eine Zeile in der Ordner-Flachliste während aktiver Suche.
 
 ## 10) Visuelle Gestaltung
